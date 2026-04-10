@@ -1,9 +1,7 @@
 // lib/screens/customer/customer_view.dart
 
 import 'package:flutter/material.dart';
-import '../../core/constants.dart';
 import '../../core/screens.dart';
-import '../../widgets/android_shell.dart';
 import 'splash_screen.dart';
 import 'home_screen.dart';
 import 'items_screen.dart';
@@ -32,20 +30,16 @@ class CustomerViewState extends State<CustomerView> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AndroidShell(
-          onHome: () => goScreen(CScreen.home),
-          onBack: () {
-            final prev = _backScreen(_current);
-            if (prev != null) goScreen(prev);
-          },
-          child: _buildScreen(),
-        ),
-        const SizedBox(width: 28),
-        _QuickNav(onNav: goScreen),
-      ],
+    return WillPopScope(
+      onWillPop: () async {
+        final prev = _backScreen(_current);
+        if (prev != null) {
+          goScreen(prev);
+          return false;
+        }
+        return true;
+      },
+      child: SafeArea(child: _buildScreen()),
     );
   }
 
@@ -93,6 +87,7 @@ class CustomerViewState extends State<CustomerView> {
 
   CScreen? _backScreen(CScreen s) => const {
     CScreen.home: null,
+    CScreen.splash: null,
     CScreen.items: CScreen.home,
     CScreen.service: CScreen.items,
     CScreen.checkout: CScreen.service,
@@ -100,84 +95,4 @@ class CustomerViewState extends State<CustomerView> {
     CScreen.profile: CScreen.home,
     CScreen.status: CScreen.home,
   }[s];
-}
-
-class _QuickNav extends StatelessWidget {
-  final Function(CScreen) onNav;
-  const _QuickNav({required this.onNav});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 180,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Customer App',
-              style: TextStyle(
-                fontFamily: kFontHead,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: kText,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Real DB writes · Stripe payments · Live tracking',
-              style: TextStyle(
-                fontSize: 11,
-                color: kMuted,
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'QUICK NAV'.toUpperCase(),
-              style: const TextStyle(
-                fontFamily: kFontHead,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: kMuted,
-                letterSpacing: 1,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _navBtn('🗺 Home', () => onNav(CScreen.home)),
-            _navBtn('🧺 Items', () => onNav(CScreen.items)),
-            _navBtn('💳 Checkout', () => onNav(CScreen.checkout)),
-            _navBtn('📋 Orders', () => onNav(CScreen.orders)),
-            _navBtn('👤 Profile', () => onNav(CScreen.profile)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navBtn(String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 5),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(
-          color: kSurface,
-          border: Border.all(color: kBorder),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: kText,
-          ),
-        ),
-      ),
-    );
-  }
 }
