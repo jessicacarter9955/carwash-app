@@ -119,13 +119,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       } catch (signInError) {
         _addLog('⚠️ Sign in failed: $signInError, trying to register...');
         // If sign in fails, try to register
-        await ref.read(authNotifierProvider.notifier).register(
-              'Demo Guest',
-              'demo@washgo.com',
-              '+1 555 0000',
-              'demo123',
-            );
-        _addLog('✅ Demo user registered successfully');
+        try {
+          await ref.read(authNotifierProvider.notifier).register(
+                'Demo Guest',
+                'demo@washgo.com',
+                '+1 555 0000',
+                'demo123',
+              );
+          _addLog('✅ Demo user registered successfully');
+          // After registration, try to sign in immediately (handles email confirmation)
+          _addLog('🔵 Attempting to sign in after registration...');
+          await ref.read(authNotifierProvider.notifier).signIn(
+                'demo@washgo.com',
+                'demo123',
+              );
+          _addLog('✅ Signed in after registration');
+        } catch (registerError) {
+          _addLog('❌ Registration failed: $registerError');
+          rethrow;
+        }
       }
       if (mounted) {
         _addLog('✅ Navigating to /home');
