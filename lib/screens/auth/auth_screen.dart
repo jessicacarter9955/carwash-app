@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
+import '../../models/user_profile.dart';
 import '../../state/app_state.dart';
 import '../../services/auth_service.dart';
 import '../../services/pricing_service.dart';
@@ -40,23 +41,24 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _handleLogin() async {
-    if (_emailCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) {
-      showToast('⚠️ Enter email and password');
-      return;
-    }
     setState(() => _loading = true);
     try {
-      final res = await AuthService.login(
-        _emailCtrl.text.trim(),
-        _passwordCtrl.text,
+      final state = context.read<AppState>();
+      final email = _emailCtrl.text.trim().isEmpty
+          ? 'demo@washgo.app'
+          : _emailCtrl.text.trim();
+      state.setProfile(
+        const UserProfile(
+          id: 'demo',
+          fullName: 'Demo User',
+          role: 'customer',
+          phone: '',
+        ),
+        'demo',
+        email,
       );
-      if (res.user != null) {
-        final state = context.read<AppState>();
-        final profile = await AuthService.loadProfile(res.user!.id);
-        state.setProfile(profile, res.user!.id, res.user!.email);
-        await PricingService.loadFromDB(state);
-        showToast('✅ Welcome back!');
-      }
+      await PricingService.loadFromDB(state);
+      showToast('✅ Signed in');
     } catch (e) {
       showToast('❌ ${e.toString()}');
     }
