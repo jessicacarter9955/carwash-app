@@ -96,10 +96,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  void _continueAsGuest() {
-    // For demo purposes, just navigate to home
-    // In production, you'd want to create a guest session
-    context.go('/home');
+  void _continueAsGuest() async {
+    setState(() => _loading = true);
+    try {
+      // Create a demo user session
+      await ref.read(authNotifierProvider.notifier).register(
+            'Demo Guest',
+            'demo@washgo.com',
+            '+1 555 0000',
+            'demo123',
+          );
+      if (mounted) context.go('/home');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
