@@ -97,8 +97,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   void _continueAsGuest() async {
+    print('🔵 [GUEST] Continue as Guest button clicked');
     setState(() => _loading = true);
+    print('🔵 [GUEST] Loading state set to true');
     try {
+      print('🔵 [GUEST] Attempting to register demo user...');
       // Create a demo user session
       await ref.read(authNotifierProvider.notifier).register(
             'Demo Guest',
@@ -106,15 +109,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             '+1 555 0000',
             'demo123',
           );
-      if (mounted) context.go('/home');
-    } catch (e) {
+      print('✅ [GUEST] Demo user registered successfully');
       if (mounted) {
+        print('✅ [GUEST] Navigating to /home');
+        context.go('/home');
+      }
+    } catch (e) {
+      print('❌ [GUEST] Error: $e');
+      if (mounted) {
+        final errorMsg = 'Error: ${e.toString().replaceAll('Exception: ', '')}';
+        print('❌ [GUEST] Showing error: $errorMsg');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}')),
+            content: Text(errorMsg),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {
+      print('🔵 [GUEST] Setting loading to false');
       if (mounted) setState(() => _loading = false);
     }
   }
