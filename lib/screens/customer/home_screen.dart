@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         // Map (52% height)
         SizedBox(
-          height: 640 * .52,
+          height: MediaQuery.of(context).size.height * .52,
           child: Stack(
             children: [
               WashGoMap(

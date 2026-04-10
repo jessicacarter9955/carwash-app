@@ -92,14 +92,6 @@ class _AuthScreenState extends State<AuthScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
-  void _handleDemo(String role) async {
-    final state = context.read<AppState>();
-    final profile = AuthService.demoProfile(role);
-    state.setProfile(profile, profile.id, '$role@washgo.demo');
-    await PricingService.loadFromDB(state);
-    showToast('✅ Welcome, ${profile.firstName}!');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -163,7 +155,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Laundry pickup & delivery · Production Backend',
+                    'Laundry pickup & delivery',
                     style: TextStyle(
                       color: kMuted,
                       fontSize: 13,
@@ -187,7 +179,6 @@ class _AuthScreenState extends State<AuthScreen> {
                       passwordCtrl: _passwordCtrl,
                       loading: _loading,
                       onLogin: _handleLogin,
-                      onDemo: _handleDemo,
                     )
                   else
                     _RegisterForm(
@@ -290,14 +281,12 @@ class _LoginForm extends StatelessWidget {
   final TextEditingController emailCtrl, passwordCtrl;
   final bool loading;
   final VoidCallback onLogin;
-  final Function(String) onDemo;
 
   const _LoginForm({
     required this.emailCtrl,
     required this.passwordCtrl,
     required this.loading,
     required this.onLogin,
-    required this.onDemo,
   });
 
   @override
@@ -320,35 +309,6 @@ class _LoginForm extends StatelessWidget {
         _PrimaryBtn(
           label: loading ? 'Signing in...' : 'Sign In →',
           onTap: loading ? null : onLogin,
-        ),
-        const SizedBox(height: 14),
-        // Divider
-        Row(
-          children: [
-            Expanded(child: Container(height: 1, color: kBorder)),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                'or continue as',
-                style: TextStyle(
-                  color: kMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Expanded(child: Container(height: 1, color: kBorder)),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            _SecBtn(label: '👤 Customer', onTap: () => onDemo('customer')),
-            const SizedBox(width: 8),
-            _SecBtn(label: '🚗 Driver', onTap: () => onDemo('driver')),
-            const SizedBox(width: 8),
-            _SecBtn(label: '📊 Admin', onTap: () => onDemo('admin')),
-          ],
         ),
       ],
     );
@@ -533,38 +493,6 @@ class _PrimaryBtn extends StatelessWidget {
             fontFamily: kFontHead,
             fontSize: 14,
             fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SecBtn extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _SecBtn({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: kSurface,
-            border: Border.all(color: kBorder, width: 1.5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: kText,
-            ),
           ),
         ),
       ),

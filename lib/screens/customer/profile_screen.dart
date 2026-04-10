@@ -85,25 +85,6 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Column(
                   children: [
-                    const SecLabel('Currency'),
-                    Row(
-                      children: [
-                        _CurrencyOpt(
-                          symbol: '\$',
-                          label: 'USD',
-                          active: state.currency == Currency.usd,
-                          onTap: () => state.setCurrency(Currency.usd),
-                        ),
-                        const SizedBox(width: 8),
-                        _CurrencyOpt(
-                          symbol: '€',
-                          label: 'EUR',
-                          active: state.currency == Currency.eur,
-                          onTap: () => state.setCurrency(Currency.eur),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -191,50 +172,3 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
-class _CurrencyOpt extends StatelessWidget {
-  final String symbol, label;
-  final bool active;
-  final VoidCallback onTap;
-  const _CurrencyOpt({
-    required this.symbol,
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: active ? kCyan3.withOpacity(.08) : kSurface,
-            border: Border.all(
-              color: active ? kCyan3 : kBorder,
-              width: active ? 1.5 : 1,
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(symbol, style: const TextStyle(fontSize: 18)),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontFamily: kFontHead,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
