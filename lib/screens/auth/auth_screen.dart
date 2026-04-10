@@ -19,6 +19,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _isLogin = true;
   bool _loading = false;
   bool _obscure = true;
+  final List<String> _logs = [];
 
   @override
   void dispose() {
@@ -96,21 +97,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  void _addLog(String message) {
+    setState(() {
+      _logs.add('${DateTime.now().toString().substring(11, 19)}: $message');
+    });
+  }
+
   void _continueAsGuest() async {
-    print('🔵 [GUEST] Continue as Guest button clicked');
+    _addLog('🔵 Continue as Guest button clicked');
     setState(() => _loading = true);
-    print('🔵 [GUEST] Loading state set to true');
+    _addLog('🔵 Loading state set to true');
     try {
       // Try to sign in with demo credentials first
-      print('🔵 [GUEST] Attempting to sign in with demo credentials...');
+      _addLog('🔵 Attempting to sign in with demo credentials...');
       try {
         await ref.read(authNotifierProvider.notifier).signIn(
               'demo@washgo.com',
               'demo123',
             );
-        print('✅ [GUEST] Demo user signed in successfully');
+        _addLog('✅ Demo user signed in successfully');
       } catch (signInError) {
-        print('⚠️ [GUEST] Sign in failed: $signInError, trying to register...');
+        _addLog('⚠️ Sign in failed: $signInError, trying to register...');
         // If sign in fails, try to register
         await ref.read(authNotifierProvider.notifier).register(
               'Demo Guest',
@@ -118,17 +125,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               '+1 555 0000',
               'demo123',
             );
-        print('✅ [GUEST] Demo user registered successfully');
+        _addLog('✅ Demo user registered successfully');
       }
       if (mounted) {
-        print('✅ [GUEST] Navigating to /home');
+        _addLog('✅ Navigating to /home');
         context.go('/home');
       }
     } catch (e) {
-      print('❌ [GUEST] Error: $e');
+      _addLog('❌ Error: $e');
       if (mounted) {
         final errorMsg = 'Error: ${e.toString().replaceAll('Exception: ', '')}';
-        print('❌ [GUEST] Showing error: $errorMsg');
+        _addLog('❌ Showing error: $errorMsg');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMsg),
@@ -137,7 +144,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         );
       }
     } finally {
-      print('🔵 [GUEST] Setting loading to false');
+      _addLog('🔵 Setting loading to false');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -323,6 +330,50 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             textAlign: TextAlign.center),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    // Debug log display
+                    if (_logs.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(rSm),
+                        ),
+                        constraints: const BoxConstraints(maxHeight: 150),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('DEBUG LOGS',
+                                      style: headStyle(
+                                          size: 10,
+                                          weight: FontWeight.w800,
+                                          color: kCyan)),
+                                  GestureDetector(
+                                    onTap: () => setState(() => _logs.clear()),
+                                    child: Text('CLEAR',
+                                        style: headStyle(
+                                            size: 10,
+                                            weight: FontWeight.w700,
+                                            color: Colors.white70)),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ..._logs.map((log) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(log,
+                                        style: bodyStyle(
+                                            size: 10, color: Colors.white70)),
+                                  )),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
