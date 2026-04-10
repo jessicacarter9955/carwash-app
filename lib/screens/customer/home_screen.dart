@@ -4,10 +4,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
+import '../../core/screens.dart';
 import '../../services/routing_service.dart';
 import '../../state/app_state.dart';
 import '../../widgets/map_widget.dart';
-import '../customer/customer_view.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(CScreen) onNav;
