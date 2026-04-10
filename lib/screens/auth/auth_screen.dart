@@ -101,15 +101,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     setState(() => _loading = true);
     print('🔵 [GUEST] Loading state set to true');
     try {
-      print('🔵 [GUEST] Attempting to register demo user...');
-      // Create a demo user session
-      await ref.read(authNotifierProvider.notifier).register(
-            'Demo Guest',
-            'demo@washgo.com',
-            '+1 555 0000',
-            'demo123',
-          );
-      print('✅ [GUEST] Demo user registered successfully');
+      // Try to sign in with demo credentials first
+      print('🔵 [GUEST] Attempting to sign in with demo credentials...');
+      try {
+        await ref.read(authNotifierProvider.notifier).signIn(
+              'demo@washgo.com',
+              'demo123',
+            );
+        print('✅ [GUEST] Demo user signed in successfully');
+      } catch (signInError) {
+        print('⚠️ [GUEST] Sign in failed: $signInError, trying to register...');
+        // If sign in fails, try to register
+        await ref.read(authNotifierProvider.notifier).register(
+              'Demo Guest',
+              'demo@washgo.com',
+              '+1 555 0000',
+              'demo123',
+            );
+        print('✅ [GUEST] Demo user registered successfully');
+      }
       if (mounted) {
         print('✅ [GUEST] Navigating to /home');
         context.go('/home');
