@@ -30,8 +30,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   void _showIncoming() {
     final names = ['Alex M.', 'Sara L.', 'Marco B.', 'Anna T.'];
-    final price = (8 + (DateTime.now().millisecond / 1000 * 12))
-        .toStringAsFixed(2);
+    final price =
+        (8 + (DateTime.now().millisecond / 1000 * 12)).toStringAsFixed(2);
     final dist = (0.5 + (DateTime.now().second / 60 * 5)).toStringAsFixed(1);
     setState(() {
       _showReq = true;
@@ -128,9 +128,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   decoration: BoxDecoration(
                     color: state.driverOnline ? kMint.withOpacity(.12) : kBg,
                     border: Border.all(
-                      color: state.driverOnline
-                          ? kMint.withOpacity(.35)
-                          : kBorder,
+                      color:
+                          state.driverOnline ? kMint.withOpacity(.35) : kBorder,
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -166,12 +165,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           child: Stack(
             children: [
               WashGoMap(
-                center: LatLng(romeLat + .005, romeLng),
+                center: LatLng(kDefaultLat + .005, kDefaultLng),
                 zoom: 14,
                 markers: [
-                  carMarker(LatLng(romeLat + .004, romeLng + .003)),
+                  carMarker(LatLng(kDefaultLat + .004, kDefaultLng + .003)),
                   Marker(
-                    point: LatLng(romeLat + .008, romeLng - .005),
+                    point: LatLng(kDefaultLat + .008, kDefaultLng - .005),
                     width: 26,
                     height: 26,
                     child: Container(

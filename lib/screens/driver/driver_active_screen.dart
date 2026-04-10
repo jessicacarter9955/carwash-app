@@ -67,16 +67,16 @@ class DriverActiveScreen extends StatelessWidget {
         SizedBox(
           height: 220,
           child: WashGoMap(
-            center: LatLng(romeLat + .004, romeLng + .003),
+            center: LatLng(kRomeLat + .004, kRomeLng + .003),
             interactive: false,
             markers: [
-              carMarker(LatLng(romeLat + .004, romeLng + .003)),
+              carMarker(LatLng(kRomeLat + .004, kRomeLng + .003)),
               userMarker(LatLng(state.userLat, state.userLng)),
             ],
             polylines: [
               Polyline(
                 points: [
-                  LatLng(romeLat + .004, romeLng + .003),
+                  LatLng(kRomeLat + .004, kRomeLng + .003),
                   LatLng(state.userLat, state.userLng),
                 ],
                 color: kCyan3,

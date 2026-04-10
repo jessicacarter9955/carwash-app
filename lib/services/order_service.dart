@@ -1,9 +1,9 @@
 import '../core/supabase_client.dart';
-import '../models/order.dart';
+import '../models/order_model.dart';
 
 class OrderService {
   // ── Place order (demo — no real DB write) ────────────
-  static AppOrder placeDemoOrder({
+  static OrderModel placeDemoOrder({
     required String customerId,
     required String serviceType,
     required Map<String, dynamic> orderItems,
@@ -12,22 +12,29 @@ class OrderService {
     required double lat,
     required double lng,
   }) {
-    return AppOrder(
+    return OrderModel(
       id: 'demo-order-${DateTime.now().millisecondsSinceEpoch}',
       customerId: customerId,
       status: 'confirmed',
       serviceType: serviceType,
+      items: orderItems,
+      subtotal: total,
+      serviceFee: 0.0,
+      addonFee: 0.0,
+      deliveryFee: 2.99,
       total: total,
       pickupAddress: pickupAddress,
       pickupLat: lat,
       pickupLng: lng,
+      pickupSlot: 'ASAP',
+      paymentMethod: 'card',
       paymentStatus: 'paid',
       createdAt: DateTime.now(),
     );
   }
 
   // ── Fetch customer orders ────────────────────────────
-  static Future<List<AppOrder>> fetchOrders(String customerId) async {
+  static Future<List<OrderModel>> fetchOrders(String customerId) async {
     try {
       final data = await sb
           .from('orders')
@@ -35,7 +42,7 @@ class OrderService {
           .eq('customer_id', customerId)
           .order('created_at', ascending: false);
       return (data as List)
-          .map((m) => AppOrder.fromMap(m as Map<String, dynamic>))
+          .map((m) => OrderModel.fromMap(m as Map<String, dynamic>))
           .toList();
     } catch (_) {
       return [];
@@ -43,7 +50,7 @@ class OrderService {
   }
 
   // ── Fetch latest order ───────────────────────────────
-  static Future<AppOrder?> fetchLatestOrder(String customerId) async {
+  static Future<OrderModel?> fetchLatestOrder(String customerId) async {
     try {
       final data = await sb
           .from('orders')
@@ -52,7 +59,7 @@ class OrderService {
           .order('created_at', ascending: false)
           .limit(1)
           .maybeSingle();
-      if (data != null) return AppOrder.fromMap(data);
+      if (data != null) return OrderModel.fromMap(data);
     } catch (_) {}
     return null;
   }
@@ -67,10 +74,8 @@ class OrderService {
   // ── Accept order (driver) ────────────────────────────
   static Future<void> acceptOrder(String orderId, String driverId) async {
     try {
-      await sb
-          .from('orders')
-          .update({'driver_id': driverId, 'status': 'confirmed'})
-          .eq('id', orderId);
+      await sb.from('orders').update(
+          {'driver_id': driverId, 'status': 'confirmed'}).eq('id', orderId);
     } catch (_) {}
   }
 }

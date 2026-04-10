@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../core/constants.dart';
-import '../models/order.dart';
+import '../models/order_model.dart';
 import '../state/app_state.dart';
 
 class OrderCard extends StatelessWidget {
-  final AppOrder order;
+  final OrderModel order;
   final AppState state;
 
   const OrderCard({super.key, required this.order, required this.state});
@@ -42,12 +42,9 @@ class OrderCard extends StatelessWidget {
                   color: kText,
                   fontFamily: kFontHead)),
           const SizedBox(height: 4),
-          Text(
-              'Slot: ${order.pickupSlot ?? '--'} · ${_formatDate(order.createdAt)}',
+          Text('Slot: ${order.pickupSlot} · ${_formatDate(order.createdAt)}',
               style: const TextStyle(
-                  fontSize: 11,
-                  color: kMuted,
-                  fontWeight: FontWeight.w500)),
+                  fontSize: 11, color: kMuted, fontWeight: FontWeight.w500)),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -59,8 +56,8 @@ class OrderCard extends StatelessWidget {
                       color: kCyan3,
                       fontFamily: kFontHead)),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: badgeColor.withOpacity(.12),
                   borderRadius: BorderRadius.circular(20),
@@ -78,6 +75,5 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day}/${d.month}/${d.year}';
+  String _formatDate(DateTime d) => '${d.day}/${d.month}/${d.year}';
 }

@@ -3,20 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants.dart';
 import '../../providers/auth_providers.dart';
+import '../../widgets/app_button.dart';
+import '../../widgets/app_toast.dart';
 
-class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({super.key});
-
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
   @override
-  ConsumerState<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _AuthScreenState extends ConsumerState<AuthScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  final _nameCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
-  bool _isLogin = true;
   bool _loading = false;
   bool _obscure = true;
 
@@ -24,82 +22,26 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
-    _nameCtrl.dispose();
-    _phoneCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _signIn() async {
+  Future<void> _login() async {
     if (_emailCtrl.text.trim().isEmpty || _passCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Enter email and password')),
-      );
+      showToast(context, '⚠️ Enter email and password');
       return;
     }
     setState(() => _loading = true);
     try {
-      await ref.read(authNotifierProvider.notifier).signIn(
-            _emailCtrl.text.trim(),
-            _passCtrl.text,
-          );
+      await ref
+          .read(authNotifierProvider.notifier)
+          .signIn(_emailCtrl.text.trim(), _passCtrl.text);
       if (mounted) context.go('/home');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}')),
-        );
-      }
+      if (mounted)
+        showToast(context, '❌ ${e.toString().replaceAll('Exception: ', '')}');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  Future<void> _register() async {
-    if (_nameCtrl.text.trim().isEmpty ||
-        _emailCtrl.text.trim().isEmpty ||
-        _passCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Fill all required fields')),
-      );
-      return;
-    }
-    if (_passCtrl.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Password min 6 characters')),
-      );
-      return;
-    }
-    setState(() => _loading = true);
-    try {
-      await ref.read(authNotifierProvider.notifier).register(
-            _nameCtrl.text.trim(),
-            _emailCtrl.text.trim(),
-            _phoneCtrl.text.trim(),
-            _passCtrl.text,
-          );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Account created! Please sign in.')),
-        );
-        setState(() => _isLogin = true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  void _continueAsGuest() {
-    // For demo purposes, just navigate to home
-    // In production, you'd want to create a guest session
-    context.go('/home');
   }
 
   @override
@@ -148,10 +90,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ]),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                        _isLogin
-                            ? 'Car pickup & wash service'
-                            : 'Create your account',
+                    Text('Car pickup & wash service',
                         style: bodyStyle(
                             size: 13, weight: FontWeight.w500, color: kMuted)),
                     const SizedBox(height: 28),
@@ -165,45 +104,31 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _isLogin = true),
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 9),
-                                decoration: _isLogin
-                                    ? BoxDecoration(
-                                        color: kSurface,
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: shadowXs,
-                                      )
-                                    : null,
-                                child: Text('Sign In',
-                                    style: headStyle(
-                                        size: 13,
-                                        weight: FontWeight.w700,
-                                        color: _isLogin ? kText : kMuted),
-                                    textAlign: TextAlign.center),
-                              ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 9),
+                              decoration: BoxDecoration(
+                                  color: kSurface,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: shadowXs),
+                              child: Text('Sign In',
+                                  style: headStyle(
+                                      size: 13,
+                                      weight: FontWeight.w700,
+                                      color: kText),
+                                  textAlign: TextAlign.center),
                             ),
                           ),
                           Expanded(
                             child: GestureDetector(
-                              onTap: () => setState(() => _isLogin = false),
-                              child: Container(
+                              onTap: () => context.go('/register'),
+                              child: Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 9),
-                                decoration: !_isLogin
-                                    ? BoxDecoration(
-                                        color: kSurface,
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: shadowXs,
-                                      )
-                                    : null,
                                 child: Text('Register',
                                     style: headStyle(
                                         size: 13,
                                         weight: FontWeight.w700,
-                                        color: !_isLogin ? kText : kMuted),
+                                        color: kMuted),
                                     textAlign: TextAlign.center),
                               ),
                             ),
@@ -212,19 +137,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    if (!_isLogin) ...[
-                      _FieldLabel('FULL NAME'),
-                      const SizedBox(height: 6),
-                      _AppTextField(controller: _nameCtrl, hint: 'John Smith'),
-                      const SizedBox(height: 14),
-                      _FieldLabel('PHONE'),
-                      const SizedBox(height: 6),
-                      _AppTextField(
-                          controller: _phoneCtrl,
-                          hint: '+1 555 000 0000',
-                          keyboardType: TextInputType.phone),
-                      const SizedBox(height: 14),
-                    ],
                     _FieldLabel('EMAIL'),
                     const SizedBox(height: 6),
                     _AppTextField(
@@ -247,11 +159,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    _AppButton(
-                      label: _isLogin ? 'Sign In →' : 'Create Account →',
-                      onTap: _isLogin ? _signIn : _register,
-                      loading: _loading,
-                    ),
+                    AppButton(
+                        label: 'Sign In →', onTap: _login, loading: _loading),
                     const SizedBox(height: 16),
                     Row(children: [
                       Expanded(child: Divider(color: kBorder)),
@@ -266,7 +175,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ]),
                     const SizedBox(height: 12),
                     GestureDetector(
-                      onTap: _continueAsGuest,
+                      onTap: () => context.go('/home'),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -297,7 +206,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 class _FieldLabel extends StatelessWidget {
   final String text;
   const _FieldLabel(this.text);
-
   @override
   Widget build(BuildContext context) => Text(
         text,
@@ -313,13 +221,12 @@ class _AppTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final Widget? suffix;
 
-  const _AppTextField({
-    required this.controller,
-    required this.hint,
-    this.obscure = false,
-    this.keyboardType,
-    this.suffix,
-  });
+  const _AppTextField(
+      {required this.controller,
+      required this.hint,
+      this.obscure = false,
+      this.keyboardType,
+      this.suffix});
 
   @override
   Widget build(BuildContext context) {
@@ -345,49 +252,6 @@ class _AppTextField extends StatelessWidget {
             borderSide: const BorderSide(color: kCyan, width: 1.5)),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      ),
-    );
-  }
-}
-
-class _AppButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final bool loading;
-
-  const _AppButton({
-    required this.label,
-    required this.onTap,
-    this.loading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: loading ? null : onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [kCyan, kMint]),
-          borderRadius: BorderRadius.circular(rSm),
-          boxShadow: shadowMd,
-        ),
-        child: loading
-            ? const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                  ),
-                ),
-              )
-            : Text(label,
-                style: headStyle(
-                    size: 14, weight: FontWeight.w700, color: Colors.white),
-                textAlign: TextAlign.center),
       ),
     );
   }

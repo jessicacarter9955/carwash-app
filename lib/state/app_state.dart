@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/user_profile.dart';
-import '../models/order.dart';
+import '../models/order_model.dart';
 
 // ── Item model ───────────────────────────────────────
 class LaundryItem {
@@ -124,7 +124,7 @@ class AppState extends ChangeNotifier {
   PaymentMethod selectedPM = PaymentMethod.card;
 
   // Current order
-  AppOrder? currentOrder;
+  OrderModel? currentOrder;
 
   // Driver state
   bool driverOnline = true;
@@ -186,7 +186,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCurrentOrder(AppOrder? o) {
+  void setCurrentOrder(OrderModel? o) {
     currentOrder = o;
     notifyListeners();
   }

@@ -4,6 +4,9 @@ import '../../../widgets/map_widget.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+const double romeLat = 41.9024;
+const double romeLng = 12.5143;
+
 class OverviewTab extends StatelessWidget {
   const OverviewTab({super.key});
 
