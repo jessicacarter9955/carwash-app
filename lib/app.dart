@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme.dart';
+import 'core/constants.dart';
 import 'core/supabase_client.dart';
 import 'state/app_state.dart';
 import 'services/auth_service.dart';
@@ -99,10 +100,13 @@ class _MainWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return switch (role) {
-      'driver' => const DriverView(),
-      'admin'  => const AdminView(),
-      _        => const CustomerView(),
-    };
+    return Scaffold(
+      backgroundColor: kBg,
+      body: switch (role) {
+        'driver' => const DriverView(),
+        'admin'  => const AdminView(),
+        _        => const CustomerView(),
+      },
+    );
   }
 }

@@ -17,7 +17,7 @@ class ServiceScreen extends StatelessWidget {
         AppHeader(title: 'Service Type', onBack: onBack),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 100),
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
             children: [
               const SecLabel('Select a service'),
               ServiceOption(
@@ -68,7 +68,6 @@ class ServiceScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 80),
             ],
           ),
         ),

@@ -26,19 +26,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       showToast('⚠️ Add items first');
       return;
     }
-    if (state.currentUserId == null) {
-      showToast('⚠️ Please sign in');
-      return;
-    }
+    final uid = state.currentUserId ?? 'guest';
     setState(() => _placing = true);
     showToast('💳 Processing payment...');
     await Future.delayed(const Duration(milliseconds: 1500));
     final order = OrderService.placeDemoOrder(
-      customerId: state.currentUserId!,
+      customerId: uid,
       serviceType: state.selectedService.label.toLowerCase(),
       orderItems: {},
       total: state.grandTotal,
-      pickupAddress: 'Demo Address',
+      pickupAddress: state.userAddress.isNotEmpty ? state.userAddress : 'Your location',
       lat: state.userLat,
       lng: state.userLng,
     );
@@ -56,7 +53,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         AppHeader(title: 'Order Summary', onBack: widget.onBack),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 100),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
             children: [
               // Pickup card
               AppCard(
@@ -74,9 +71,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Detecting...',
-                      style: TextStyle(
+                    Text(
+                      state.userAddress.isNotEmpty
+                          ? state.userAddress
+                          : 'Location not set',
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),

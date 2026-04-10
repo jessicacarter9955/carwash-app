@@ -67,6 +67,7 @@ class AppState extends ChangeNotifier {
   // Location
   double userLat = 41.8988;
   double userLng = 12.4768;
+  String userAddress = '';
 
   // Currency
   Currency currency = Currency.usd;
@@ -190,9 +191,15 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setLocation(double lat, double lng) {
+  void setLocation(double lat, double lng, {String address = ''}) {
     userLat = lat;
     userLng = lng;
+    if (address.isNotEmpty) userAddress = address;
+    notifyListeners();
+  }
+
+  void setAddress(String address) {
+    userAddress = address;
     notifyListeners();
   }
 

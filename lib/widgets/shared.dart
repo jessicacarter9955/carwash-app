@@ -60,15 +60,12 @@ class BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final safeBottom = MediaQuery.of(context).padding.bottom;
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [kBg, kBg.withOpacity(0)],
-          stops: const [.7, 1.0],
-        ),
+      padding: EdgeInsets.fromLTRB(14, 12, 14, safeBottom + 12),
+      decoration: const BoxDecoration(
+        color: kSurface,
+        border: Border(top: BorderSide(color: kBorder)),
       ),
       child: child,
     );

@@ -119,7 +119,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
       children: [
         // Map
         SizedBox(
-          height: 640 * .52,
+          height: MediaQuery.of(context).size.height * .46,
           child: Stack(
             children: [
               WashGoMap(
@@ -196,7 +196,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
           left: 0,
           right: 0,
           child: Container(
-            constraints: BoxConstraints(maxHeight: 640 * .5),
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .56),
             decoration: BoxDecoration(
               color: kSurface,
               borderRadius: const BorderRadius.vertical(
@@ -212,7 +212,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
               ],
             ),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 80),
+              padding: EdgeInsets.fromLTRB(14, 12, 14, MediaQuery.of(context).padding.bottom + 16),
               child: Column(
                 children: [
                   Center(

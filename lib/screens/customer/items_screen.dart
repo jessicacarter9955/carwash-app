@@ -20,7 +20,7 @@ class ItemsScreen extends StatelessWidget {
         // Scroll body
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 90),
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
             children: [
               const SecLabel('Clothing'),
               ...state.items.values.map((item) => ItemRow(item: item)),
