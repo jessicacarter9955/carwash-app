@@ -146,12 +146,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } catch (e) {
       _addLog('❌ Error: $e');
       if (mounted) {
-        final errorMsg = 'Error: ${e.toString().replaceAll('Exception: ', '')}';
+        String errorMsg = e.toString().replaceAll('Exception: ', '');
+        // Provide specific guidance for rate limit error
+        if (errorMsg.contains('429') || errorMsg.contains('rate limit')) {
+          errorMsg =
+              'Rate limit exceeded. Please disable email confirmation in Supabase dashboard (Authentication → Email → Confirm email: OFF)';
+        }
         _addLog('❌ Showing error: $errorMsg');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMsg),
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 8),
           ),
         );
       }
