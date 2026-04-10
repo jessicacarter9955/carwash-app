@@ -105,64 +105,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   void _continueAsGuest() async {
     _addLog('🔵 Continue as Guest button clicked');
-    setState(() => _loading = true);
-    _addLog('🔵 Loading state set to true');
-    try {
-      // Try to sign in with demo credentials first
-      _addLog('🔵 Attempting to sign in with demo credentials...');
-      try {
-        await ref.read(authNotifierProvider.notifier).signIn(
-              'demo@washgo.com',
-              'demo123',
-            );
-        _addLog('✅ Demo user signed in successfully');
-      } catch (signInError) {
-        _addLog('⚠️ Sign in failed: $signInError, trying to register...');
-        // If sign in fails, try to register
-        try {
-          await ref.read(authNotifierProvider.notifier).register(
-                'Demo Guest',
-                'demo@washgo.com',
-                '+1 555 0000',
-                'demo123',
-              );
-          _addLog('✅ Demo user registered successfully');
-          // After registration, try to sign in immediately (handles email confirmation)
-          _addLog('🔵 Attempting to sign in after registration...');
-          await ref.read(authNotifierProvider.notifier).signIn(
-                'demo@washgo.com',
-                'demo123',
-              );
-          _addLog('✅ Signed in after registration');
-        } catch (registerError) {
-          _addLog('❌ Registration failed: $registerError');
-          rethrow;
-        }
-      }
-      if (mounted) {
-        _addLog('✅ Navigating to /home');
-        context.go('/home');
-      }
-    } catch (e) {
-      _addLog('❌ Error: $e');
-      if (mounted) {
-        String errorMsg = e.toString().replaceAll('Exception: ', '');
-        // Provide specific guidance for rate limit error
-        if (errorMsg.contains('429') || errorMsg.contains('rate limit')) {
-          errorMsg =
-              'Rate limit exceeded. Please disable email confirmation in Supabase dashboard (Authentication → Email → Confirm email: OFF)';
-        }
-        _addLog('❌ Showing error: $errorMsg');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            duration: const Duration(seconds: 8),
-          ),
-        );
-      }
-    } finally {
-      _addLog('🔵 Setting loading to false');
-      if (mounted) setState(() => _loading = false);
+    _addLog('🔵 Bypassing authentication - navigating directly to home');
+    if (mounted) {
+      context.go('/home');
     }
   }
 

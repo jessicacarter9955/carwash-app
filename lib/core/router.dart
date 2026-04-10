@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/auth_providers.dart';
 import '../screens/auth/auth_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/items/items_screen.dart';
@@ -14,14 +13,10 @@ import '../screens/rating/rating_screen.dart';
 import '../screens/location/address_input_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
   return GoRouter(
     initialLocation: '/home',
     redirect: (context, state) {
-      final isAuth = authState.value != null;
-      final isAuthRoute = state.matchedLocation == '/login';
-      if (!isAuth && !isAuthRoute) return '/login';
-      if (isAuth && isAuthRoute) return '/home';
+      // No authentication required - allow all routes
       return null;
     },
     routes: [
