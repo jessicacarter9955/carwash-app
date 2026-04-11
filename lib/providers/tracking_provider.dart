@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
+import '../services/routing_service.dart';
 import 'auth_providers.dart';
 import 'order_provider.dart';
 
@@ -19,6 +20,7 @@ class TrackingState {
   final String driverName;
   final String driverPlate;
   final double driverRating;
+  final double driverRotation;
   // Key status for car wash
   final String keyStatus; // with_customer, with_driver, at_wash, returned
 
@@ -32,6 +34,7 @@ class TrackingState {
     this.driverName = 'Luca R.',
     this.driverPlate = 'AB 123 CD',
     this.driverRating = 4.9,
+    this.driverRotation = 0,
     this.keyStatus = 'with_customer',
   });
 
@@ -45,6 +48,7 @@ class TrackingState {
     String? driverName,
     String? driverPlate,
     double? driverRating,
+    double? driverRotation,
     String? keyStatus,
   }) => TrackingState(
     userPos: userPos ?? this.userPos,
@@ -56,6 +60,7 @@ class TrackingState {
     driverName: driverName ?? this.driverName,
     driverPlate: driverPlate ?? this.driverPlate,
     driverRating: driverRating ?? this.driverRating,
+    driverRotation: driverRotation ?? this.driverRotation,
     keyStatus: keyStatus ?? this.keyStatus,
   );
 }
@@ -67,22 +72,29 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
   TrackingNotifier(this._ref) : super(const TrackingState());
 
-  void startTracking(double userLat, double userLng) {
+  Future<void> startTracking(double userLat, double userLng) async {
     final rnd = Random();
     final driverLat = userLat + (rnd.nextDouble() - 0.5) * 0.02;
     final driverLng = userLng + (rnd.nextDouble() - 0.5) * 0.02;
 
     final userPos = LatLng(userLat, userLng);
     final driverPos = LatLng(driverLat, driverLng);
-    final route = _interpolate(driverPos, userPos, 60);
+
+    // Fetch actual street-level route from Mapbox
+    final routeResult = await RoutingService.fetchRoute(
+      driverLat,
+      driverLng,
+      userLat,
+      userLng,
+    );
 
     state = state.copyWith(
       userPos: userPos,
       driverPos: driverPos,
-      routeCoords: route,
+      routeCoords: routeResult.coords,
       simIndex: 0,
       phase: TrackingPhase.toPickup,
-      etaMinutes: 8,
+      etaMinutes: int.tryParse(routeResult.dur) ?? 8,
       keyStatus: 'with_customer',
     );
 
@@ -104,18 +116,11 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     } catch (_) {}
   }
 
-  List<LatLng> _interpolate(LatLng from, LatLng to, int steps) {
-    final coords = <LatLng>[];
-    for (int i = 0; i <= steps; i++) {
-      final t = i / steps;
-      coords.add(
-        LatLng(
-          from.latitude + (to.latitude - from.latitude) * t,
-          from.longitude + (to.longitude - from.longitude) * t,
-        ),
-      );
-    }
-    return coords;
+  double _calculateRotation(LatLng start, LatLng end) {
+    final latDiff = end.latitude - start.latitude;
+    final lngDiff = end.longitude - start.longitude;
+    final angle = atan2(lngDiff, latDiff);
+    return angle * 180 / pi;
   }
 
   void _runSimulation(LatLng userPos) {
@@ -136,12 +141,15 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
       final remaining = coords.length - idx;
       final eta = max(1, (remaining * 0.015).round());
+      final newPos = coords[idx];
+      final rotation = _calculateRotation(state.driverPos, newPos);
 
       state = state.copyWith(
-        driverPos: coords[idx],
+        driverPos: newPos,
         simIndex: idx + 1,
         etaMinutes: eta,
         phase: TrackingPhase.toPickup,
+        driverRotation: rotation,
       );
     });
   }
@@ -151,13 +159,19 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    // Phase 2: drive to hub
-    final hubPos = const LatLng(kHubLat, kHubLng);
-    final route = _interpolate(userPos, hubPos, 80);
+    // Phase 2: drive to hub using actual street-level route
+    final routeResult = await RoutingService.fetchRoute(
+      userPos.latitude,
+      userPos.longitude,
+      kHubLat,
+      kHubLng,
+    );
+
     state = state.copyWith(
-      routeCoords: route,
+      routeCoords: routeResult.coords,
       simIndex: 0,
       phase: TrackingPhase.toHub,
+      driverPos: userPos,
     );
 
     _simTimer = Timer.periodic(const Duration(milliseconds: 600), (timer) {
@@ -171,9 +185,12 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
         _onAtHub();
         return;
       }
+      final newPos = state.routeCoords[idx];
+      final rotation = _calculateRotation(state.driverPos, newPos);
       state = state.copyWith(
-        driverPos: state.routeCoords[idx],
+        driverPos: newPos,
         simIndex: idx + 1,
+        driverRotation: rotation,
       );
     });
 

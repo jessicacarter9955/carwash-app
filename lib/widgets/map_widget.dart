@@ -50,38 +50,41 @@ Marker userMarker(LatLng pos) => Marker(
   point: pos,
   width: 26,
   height: 26,
-  child: _CircleMarker(bg: kMint, child: '👤', size: 12),
+  child: _CircleMarker(bg: kMint, icon: Icons.person, size: 12),
 );
 
-Marker carMarker(LatLng pos) => Marker(
+Marker carMarker(LatLng pos, [double rotation = 0]) => Marker(
   point: pos,
   width: 34,
   height: 34,
-  child: _CircleMarker(bg: kCyan3, child: '🚗', size: 16),
+  child: RotatedBox(
+    quarterTurns: (rotation / 90).round(),
+    child: _CircleMarker(bg: kCyan3, icon: Icons.directions_car, size: 16),
+  ),
 );
 
 Marker destMarker(LatLng pos) => Marker(
   point: pos,
   width: 26,
   height: 26,
-  child: _CircleMarker(bg: kRed, child: '🏁', size: 12),
+  child: _CircleMarker(bg: kRed, icon: Icons.location_on, size: 12),
 );
 
 Marker hubMarker(LatLng pos) => Marker(
   point: pos,
   width: 28,
   height: 28,
-  child: _CircleMarker(bg: kOrange, child: '🏭', size: 14),
+  child: _CircleMarker(bg: kOrange, icon: Icons.local_shipping, size: 14),
 );
 
 class _CircleMarker extends StatelessWidget {
   final Color bg;
-  final String child;
+  final IconData icon;
   final double size;
 
   const _CircleMarker({
     required this.bg,
-    required this.child,
+    required this.icon,
     required this.size,
   });
 
@@ -101,7 +104,7 @@ class _CircleMarker extends StatelessWidget {
         ],
       ),
       child: Center(
-        child: Text(child, style: TextStyle(fontSize: size)),
+        child: Icon(icon, size: size, color: Colors.white),
       ),
     );
   }

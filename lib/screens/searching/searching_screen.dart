@@ -20,22 +20,26 @@ class _SearchingScreenState extends ConsumerState<SearchingScreen>
   @override
   void initState() {
     super.initState();
-    _ctrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 3));
-    _progress = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+    _progress = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
     _ctrl.addListener(() => setState(() => _displayProgress = _progress.value));
     _ctrl.forward().then((_) {
       if (mounted) _onFound();
     });
   }
 
-  void _onFound() {
+  Future<void> _onFound() async {
     final location = ref.read(locationProvider);
-    ref
+    await ref
         .read(trackingProvider.notifier)
         .startTracking(location.lat, location.lng);
-    context.go('/tracking');
+    if (mounted) context.go('/tracking');
   }
 
   @override
@@ -57,25 +61,35 @@ class _SearchingScreenState extends ConsumerState<SearchingScreen>
               RotationTransition(
                 turns: Tween(begin: 0.0, end: 1.0).animate(
                   AnimationController(
-                      vsync: this, duration: const Duration(seconds: 3))
-                    ..repeat(),
+                    vsync: this,
+                    duration: const Duration(seconds: 3),
+                  )..repeat(),
                 ),
                 child: const Text('🔄', style: TextStyle(fontSize: 56)),
               ),
               const SizedBox(height: 20),
-              Text('Finding your driver...',
-                  style: headStyle(size: 20, weight: FontWeight.w900),
-                  textAlign: TextAlign.center),
+              Text(
+                'Finding your driver...',
+                style: headStyle(size: 20, weight: FontWeight.w900),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 6),
-              Text('Scanning nearby drivers',
-                  style: bodyStyle(
-                      size: 13, weight: FontWeight.w600, color: kMuted)),
+              Text(
+                'Scanning nearby drivers',
+                style: bodyStyle(
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: kMuted,
+                ),
+              ),
               const SizedBox(height: 24),
               Container(
                 width: 180,
                 height: 5,
                 decoration: BoxDecoration(
-                    color: kBorder, borderRadius: BorderRadius.circular(3)),
+                  color: kBorder,
+                  borderRadius: BorderRadius.circular(3),
+                ),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
                   widthFactor: _displayProgress,
