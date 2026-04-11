@@ -23,13 +23,19 @@ class ItemsScreen extends ConsumerWidget {
           Container(
             color: kBg.withOpacity(0.95),
             padding: EdgeInsets.fromLTRB(
-                14, MediaQuery.of(context).padding.top + 12, 14, 10),
+              14,
+              MediaQuery.of(context).padding.top + 12,
+              14,
+              10,
+            ),
             child: Row(
               children: [
                 const BackButtonWidget(),
                 const SizedBox(width: 10),
-                Text('Select Items',
-                    style: headStyle(size: 16, weight: FontWeight.w800)),
+                Text(
+                  'Select Service',
+                  style: headStyle(size: 16, weight: FontWeight.w800),
+                ),
               ],
             ),
           ),
@@ -41,10 +47,14 @@ class ItemsScreen extends ConsumerWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Text('CLOTHING',
-                      style: headStyle(
-                              size: 10, weight: FontWeight.w800, color: kMuted)
-                          .copyWith(letterSpacing: 1.2)),
+                  child: Text(
+                    'WASH PACKAGES',
+                    style: headStyle(
+                      size: 10,
+                      weight: FontWeight.w800,
+                      color: kMuted,
+                    ).copyWith(letterSpacing: 1.2),
+                  ),
                 ),
                 ...cart.items.map((item) {
                   final qty = cart.quantities[item.key] ?? 0;
@@ -77,12 +87,22 @@ class ItemsScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Subtotal',
-                        style: bodyStyle(
-                            size: 12, weight: FontWeight.w600, color: kMuted)),
-                    Text('\$${cart.itemsTotal.toStringAsFixed(2)}',
-                        style: headStyle(
-                            size: 14, weight: FontWeight.w800, color: kText)),
+                    Text(
+                      'Subtotal',
+                      style: bodyStyle(
+                        size: 12,
+                        weight: FontWeight.w600,
+                        color: kMuted,
+                      ),
+                    ),
+                    Text(
+                      '\$${cart.itemsTotal.toStringAsFixed(2)}',
+                      style: headStyle(
+                        size: 14,
+                        weight: FontWeight.w800,
+                        color: kText,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -139,8 +159,10 @@ class _ItemRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: headStyle(size: 13, weight: FontWeight.w700)),
-                Text('\$${price.toStringAsFixed(2)} per item',
-                    style: bodyStyle(size: 11, color: kMuted)),
+                Text(
+                  '\$${price.toStringAsFixed(2)} per item',
+                  style: bodyStyle(size: 11, color: kMuted),
+                ),
               ],
             ),
           ),
@@ -149,9 +171,11 @@ class _ItemRow extends StatelessWidget {
               _QtyBtn(icon: '−', onTap: onMinus),
               SizedBox(
                 width: 28,
-                child: Text('$qty',
-                    style: headStyle(size: 13, weight: FontWeight.w800),
-                    textAlign: TextAlign.center),
+                child: Text(
+                  '$qty',
+                  style: headStyle(size: 13, weight: FontWeight.w800),
+                  textAlign: TextAlign.center,
+                ),
               ),
               _QtyBtn(icon: '+', onTap: onPlus),
             ],
@@ -180,9 +204,11 @@ class _QtyBtn extends StatelessWidget {
           borderRadius: BorderRadius.circular(7),
         ),
         child: Center(
-            child: Text(icon,
-                style: bodyStyle(
-                    size: 14, weight: FontWeight.w600, color: kText2))),
+          child: Text(
+            icon,
+            style: bodyStyle(size: 14, weight: FontWeight.w600, color: kText2),
+          ),
+        ),
       ),
     );
   }

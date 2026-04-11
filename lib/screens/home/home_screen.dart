@@ -81,30 +81,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.washgo.app',
               ),
-              MarkerLayer(markers: [
-                Marker(
-                  point: LatLng(location.lat, location.lng),
-                  width: 32,
-                  height: 32,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: kMint,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                      boxShadow: [
-                        BoxShadow(color: kMint.withOpacity(0.4), blurRadius: 12)
-                      ],
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: LatLng(location.lat, location.lng),
+                    width: 32,
+                    height: 32,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kMint,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: kMint.withOpacity(0.4),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     ),
-                    child:
-                        const Icon(Icons.person, color: Colors.white, size: 14),
                   ),
-                ),
-                // Simulated nearby drivers
-                ...[
-                  [location.lat + 0.008, location.lng + 0.006],
-                  [location.lat - 0.006, location.lng + 0.010],
-                  [location.lat + 0.012, location.lng - 0.004],
-                ].map((coords) => Marker(
+                  // Simulated nearby drivers
+                  ...[
+                    [location.lat + 0.008, location.lng + 0.006],
+                    [location.lat - 0.006, location.lng + 0.010],
+                    [location.lat + 0.012, location.lng - 0.004],
+                  ].map(
+                    (coords) => Marker(
                       point: LatLng(coords[0], coords[1]),
                       width: 36,
                       height: 36,
@@ -115,13 +123,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           border: Border.all(color: Colors.white, width: 2),
                           boxShadow: [
                             BoxShadow(
-                                color: kCyan.withOpacity(0.4), blurRadius: 10)
+                              color: kCyan.withOpacity(0.4),
+                              blurRadius: 10,
+                            ),
                           ],
                         ),
                         child: const Text('🚗', style: TextStyle(fontSize: 16)),
                       ),
-                    )),
-              ]),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
 
@@ -142,10 +154,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('YOUR LOCATION',
-                      style: headStyle(
-                              size: 9, weight: FontWeight.w800, color: kMuted)
-                          .copyWith(letterSpacing: 0.8)),
+                  Text(
+                    'YOUR LOCATION',
+                    style: headStyle(
+                      size: 9,
+                      weight: FontWeight.w800,
+                      color: kMuted,
+                    ).copyWith(letterSpacing: 0.8),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     location.loading
@@ -168,14 +184,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: kSurface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(22)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(22),
+                ),
                 border: Border(top: BorderSide(color: kBorder)),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, -4))
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, -4),
+                  ),
                 ],
               ),
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 24),
@@ -184,30 +202,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   // Handle
                   Container(
-                      width: 32,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: kBorder2,
-                          borderRadius: BorderRadius.circular(2))),
+                    width: 32,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: kBorder2,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
                         child: RichText(
-                          text: TextSpan(children: [
-                            TextSpan(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
                                 text: 'Hey, ',
                                 style: headStyle(
-                                    size: 20, weight: FontWeight.w900)),
-                            TextSpan(
+                                  size: 20,
+                                  weight: FontWeight.w900,
+                                ),
+                              ),
+                              TextSpan(
                                 text: '$firstName ',
                                 style: headStyle(
-                                    size: 20,
-                                    weight: FontWeight.w900,
-                                    color: kCyan)),
-                            const TextSpan(
-                                text: '👋', style: TextStyle(fontSize: 20)),
-                          ]),
+                                  size: 20,
+                                  weight: FontWeight.w900,
+                                  color: kCyan,
+                                ),
+                              ),
+                              const TextSpan(
+                                text: '👋',
+                                style: TextStyle(fontSize: 20),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -215,31 +244,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 2),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('What do you need today?',
-                        style: bodyStyle(
-                            size: 12, weight: FontWeight.w600, color: kMuted)),
+                    child: Text(
+                      'What does your car need today?',
+                      style: bodyStyle(
+                        size: 12,
+                        weight: FontWeight.w600,
+                        color: kMuted,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   // Service tabs
                   Row(
                     children: [
                       _ServiceTab(
-                          emoji: '🧺',
-                          label: 'Laundry',
-                          active: true,
-                          onTap: () => context.push('/items')),
+                        emoji: '🚗',
+                        label: 'Car Wash',
+                        active: true,
+                        onTap: () => context.push('/items'),
+                      ),
                       const SizedBox(width: 8),
                       _ServiceTab(
-                          emoji: '⚡',
-                          label: 'Express',
-                          onTap: () =>
-                              showToast(context, '⚡ Express coming soon!')),
+                        emoji: '⚡',
+                        label: 'Express',
+                        onTap: () =>
+                            showToast(context, '⚡ Express coming soon!'),
+                      ),
                       const SizedBox(width: 8),
                       _ServiceTab(
-                          emoji: '🗓',
-                          label: 'Schedule',
-                          onTap: () =>
-                              showToast(context, '🗓 Schedule coming soon!')),
+                        emoji: '🗓',
+                        label: 'Schedule',
+                        onTap: () =>
+                            showToast(context, '🗓 Schedule coming soon!'),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -248,7 +285,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onTap: () => context.push('/address'),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: kBg,
                         border: Border.all(color: kBorder, width: 1.5),
@@ -257,31 +296,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Row(
                         children: [
                           Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                  color: kCyan, shape: BoxShape.circle)),
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: kCyan,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('PICKUP ADDRESS',
-                                    style: headStyle(
-                                            size: 9,
-                                            weight: FontWeight.w800,
-                                            color: kMuted)
-                                        .copyWith(letterSpacing: 0.8)),
-                                Text(location.address,
-                                    style: bodyStyle(
-                                        size: 12, weight: FontWeight.w600),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis),
+                                Text(
+                                  'PICKUP ADDRESS',
+                                  style: headStyle(
+                                    size: 9,
+                                    weight: FontWeight.w800,
+                                    color: kMuted,
+                                  ).copyWith(letterSpacing: 0.8),
+                                ),
+                                Text(
+                                  location.address,
+                                  style: bodyStyle(
+                                    size: 12,
+                                    weight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right,
-                              color: kMuted, size: 18),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: kMuted,
+                            size: 18,
+                          ),
                         ],
                       ),
                     ),
@@ -291,19 +342,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Row(
                     children: [
                       _QuickTile(
-                          emoji: '📦',
-                          label: 'Track',
-                          onTap: () => context.push('/tracking')),
+                        emoji: '📦',
+                        label: 'Track',
+                        onTap: () => context.push('/tracking'),
+                      ),
                       const SizedBox(width: 8),
                       _QuickTile(
-                          emoji: '📋',
-                          label: 'Orders',
-                          onTap: () => context.push('/orders')),
+                        emoji: '📋',
+                        label: 'Orders',
+                        onTap: () => context.push('/orders'),
+                      ),
                       const SizedBox(width: 8),
                       _QuickTile(
-                          emoji: '👤',
-                          label: 'Profile',
-                          onTap: () => context.push('/profile')),
+                        emoji: '👤',
+                        label: 'Profile',
+                        onTap: () => context.push('/profile'),
+                      ),
                     ],
                   ),
                 ],
@@ -327,16 +381,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.notifications_active,
-                            size: 48, color: kCyan),
+                        const Icon(
+                          Icons.notifications_active,
+                          size: 48,
+                          color: kCyan,
+                        ),
                         const SizedBox(height: 16),
-                        Text('Enable Notifications',
-                            style:
-                                headStyle(size: 18, weight: FontWeight.w800)),
+                        Text(
+                          'Enable Notifications',
+                          style: headStyle(size: 18, weight: FontWeight.w800),
+                        ),
                         const SizedBox(height: 8),
-                        Text('Get updates on your order status',
-                            style: bodyStyle(size: 13, color: kMuted),
-                            textAlign: TextAlign.center),
+                        Text(
+                          'Get updates on your order status',
+                          style: bodyStyle(size: 13, color: kMuted),
+                          textAlign: TextAlign.center,
+                        ),
                         const SizedBox(height: 20),
                         Row(
                           children: [
@@ -346,8 +406,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(color: kBorder),
                                   foregroundColor: kText,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(rSm),
                                   ),
@@ -362,8 +423,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: kCyan3,
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(rSm),
                                   ),
@@ -390,11 +452,12 @@ class _ServiceTab extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
-  const _ServiceTab(
-      {required this.emoji,
-      required this.label,
-      this.active = false,
-      required this.onTap});
+  const _ServiceTab({
+    required this.emoji,
+    required this.label,
+    this.active = false,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -416,11 +479,14 @@ class _ServiceTab extends StatelessWidget {
             children: [
               Text(emoji, style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 4),
-              Text(label,
-                  style: headStyle(
-                      size: 10,
-                      weight: FontWeight.w700,
-                      color: active ? kCyan3 : kMuted)),
+              Text(
+                label,
+                style: headStyle(
+                  size: 10,
+                  weight: FontWeight.w700,
+                  color: active ? kCyan3 : kMuted,
+                ),
+              ),
             ],
           ),
         ),
@@ -432,8 +498,11 @@ class _ServiceTab extends StatelessWidget {
 class _QuickTile extends StatelessWidget {
   final String emoji, label;
   final VoidCallback onTap;
-  const _QuickTile(
-      {required this.emoji, required this.label, required this.onTap});
+  const _QuickTile({
+    required this.emoji,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -451,9 +520,14 @@ class _QuickTile extends StatelessWidget {
             children: [
               Text(emoji, style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 2),
-              Text(label,
-                  style: headStyle(
-                      size: 9, weight: FontWeight.w700, color: kMuted)),
+              Text(
+                label,
+                style: headStyle(
+                  size: 9,
+                  weight: FontWeight.w700,
+                  color: kMuted,
+                ),
+              ),
             ],
           ),
         ),

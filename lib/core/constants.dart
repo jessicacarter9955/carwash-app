@@ -12,11 +12,11 @@ const String kSupabaseAnonKey = supabaseAnon;
 // Colors
 const kBg = Color(0xFFF4F5F6);
 const kSurface = Colors.white;
-const kCyan = Color(0xFF49CBEB);
-const kCyan2 = Color(0xFF2BB8DB);
-const kCyan3 = Color(0xFF1AA3C8);
-const kMint = Color(0xFF00E5B4);
-const kMint2 = Color(0xFF00C99C);
+const kCyan = Color(0xFF2563EB); // Changed to blue for car wash
+const kCyan2 = Color(0xFF1D4ED8);
+const kCyan3 = Color(0xFF1E40AF);
+const kMint = Color(0xFF3B82F6); // Changed to navy blue
+const kMint2 = Color(0xFF2563EB);
 const kRed = Color(0xFFFF4D6D);
 const kOrange = Color(0xFFFF8C42);
 const kYellow = Color(0xFFFFD700);
@@ -34,37 +34,43 @@ const double rXl = 28;
 
 // Shadows
 const shadowXs = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1))
+  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
 ];
 const shadowSm = [
-  BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2))
+  BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2)),
 ];
 const shadowMd = [
-  BoxShadow(color: Color(0x1A000000), blurRadius: 20, offset: Offset(0, 4))
+  BoxShadow(color: Color(0x1A000000), blurRadius: 20, offset: Offset(0, 4)),
 ];
 const shadowLg = [
-  BoxShadow(color: Color(0x1F000000), blurRadius: 40, offset: Offset(0, 8))
+  BoxShadow(color: Color(0x1F000000), blurRadius: 40, offset: Offset(0, 8)),
 ];
 
-TextStyle headStyle(
-        {double size = 14,
-        FontWeight weight = FontWeight.w800,
-        Color? color}) =>
-    GoogleFonts.nunito(
-        fontSize: size, fontWeight: weight, color: color ?? kText);
+TextStyle headStyle({
+  double size = 14,
+  FontWeight weight = FontWeight.w800,
+  Color? color,
+}) => GoogleFonts.nunito(
+  fontSize: size,
+  fontWeight: weight,
+  color: color ?? kText,
+);
 
-TextStyle bodyStyle(
-        {double size = 13,
-        FontWeight weight = FontWeight.w400,
-        Color? color}) =>
-    GoogleFonts.dmSans(
-        fontSize: size, fontWeight: weight, color: color ?? kText);
+TextStyle bodyStyle({
+  double size = 13,
+  FontWeight weight = FontWeight.w400,
+  Color? color,
+}) => GoogleFonts.dmSans(
+  fontSize: size,
+  fontWeight: weight,
+  color: color ?? kText,
+);
 
 // Font families
 const String kFontHead = 'Nunito';
 const String kFontBody = 'DMSans';
 
-// Hub location (WashGo facility)
+// Hub location (CarWash Pro facility)
 const double kHubLat = 41.9024;
 const double kHubLng = 12.5143;
 const double kDefaultLat = 41.8988;

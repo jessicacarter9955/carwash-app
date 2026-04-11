@@ -14,13 +14,39 @@ class CartItemDefinition {
 
 final defaultItems = [
   CartItemDefinition(
-      key: 'shirts', name: 'Shirts / T-shirts', emoji: '👕', price: 2.50),
+    key: 'basic',
+    name: 'Basic Wash',
+    emoji: '�',
+    price: 15.00,
+  ),
   CartItemDefinition(
-      key: 'pants', name: 'Pants / Jeans', emoji: '👖', price: 3.50),
-  CartItemDefinition(key: 'dress', name: 'Dresses', emoji: '👗', price: 5.00),
+    key: 'premium',
+    name: 'Premium Wash',
+    emoji: '✨',
+    price: 25.00,
+  ),
   CartItemDefinition(
-      key: 'jacket', name: 'Jackets / Coats', emoji: '🧥', price: 8.00),
+    key: 'interior',
+    name: 'Interior Detailing',
+    emoji: '🧹',
+    price: 35.00,
+  ),
   CartItemDefinition(
-      key: 'sheets', name: 'Bed Sheets', emoji: '🛏', price: 6.00),
-  CartItemDefinition(key: 'towels', name: 'Towels', emoji: '🏊', price: 2.00),
+    key: 'exterior',
+    name: 'Exterior Detailing',
+    emoji: '�',
+    price: 30.00,
+  ),
+  CartItemDefinition(
+    key: 'full',
+    name: 'Full Service Package',
+    emoji: '⭐',
+    price: 60.00,
+  ),
+  CartItemDefinition(
+    key: 'express',
+    name: 'Express Wash (1hr)',
+    emoji: '⚡',
+    price: 20.00,
+  ),
 ];
