@@ -39,16 +39,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
     setState(() => _loading = true);
     try {
-      await ref.read(authNotifierProvider.notifier).signIn(
-            _emailCtrl.text.trim(),
-            _passCtrl.text,
-          );
+      await ref
+          .read(authNotifierProvider.notifier)
+          .signIn(_emailCtrl.text.trim(), _passCtrl.text);
       if (mounted) context.go('/home');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}')),
+            content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}'),
+          ),
         );
       }
     } finally {
@@ -73,7 +73,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
     setState(() => _loading = true);
     try {
-      await ref.read(authNotifierProvider.notifier).register(
+      await ref
+          .read(authNotifierProvider.notifier)
+          .register(
             _nameCtrl.text.trim(),
             _emailCtrl.text.trim(),
             _phoneCtrl.text.trim(),
@@ -89,7 +91,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}')),
+            content: Text('❌ ${e.toString().replaceAll('Exception: ', '')}'),
+          ),
         );
       }
     } finally {
@@ -109,6 +112,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     if (mounted) {
       context.go('/home');
     }
+  }
+
+  Future<void> _socialSignIn(String provider) async {
+    _addLog('🔵 $provider sign-in clicked (not implemented yet)');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('⚠️ $provider sign-in coming soon!')),
+    );
   }
 
   @override
@@ -139,37 +149,46 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     RichText(
-                      text: TextSpan(children: [
-                        TextSpan(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
                             text: 'Wash',
                             style: headStyle(
-                                    size: 34,
-                                    weight: FontWeight.w900,
-                                    color: kCyan)
-                                .copyWith(letterSpacing: -1)),
-                        TextSpan(
+                              size: 34,
+                              weight: FontWeight.w900,
+                              color: kCyan,
+                            ).copyWith(letterSpacing: -1),
+                          ),
+                          TextSpan(
                             text: 'Go',
                             style: headStyle(
-                                    size: 34,
-                                    weight: FontWeight.w900,
-                                    color: kText)
-                                .copyWith(letterSpacing: -1)),
-                      ]),
+                              size: 34,
+                              weight: FontWeight.w900,
+                              color: kText,
+                            ).copyWith(letterSpacing: -1),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                        _isLogin
-                            ? 'Car pickup & wash service'
-                            : 'Create your account',
-                        style: bodyStyle(
-                            size: 13, weight: FontWeight.w500, color: kMuted)),
+                      _isLogin
+                          ? 'Car pickup & wash service'
+                          : 'Create your account',
+                      style: bodyStyle(
+                        size: 13,
+                        weight: FontWeight.w500,
+                        color: kMuted,
+                      ),
+                    ),
                     const SizedBox(height: 28),
                     // Tabs
                     Container(
                       decoration: BoxDecoration(
-                          color: kBg,
-                          border: Border.all(color: kBorder),
-                          borderRadius: BorderRadius.circular(rSm)),
+                        color: kBg,
+                        border: Border.all(color: kBorder),
+                        borderRadius: BorderRadius.circular(rSm),
+                      ),
                       padding: const EdgeInsets.all(4),
                       child: Row(
                         children: [
@@ -177,8 +196,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             child: GestureDetector(
                               onTap: () => setState(() => _isLogin = true),
                               child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 9),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 9,
+                                ),
                                 decoration: _isLogin
                                     ? BoxDecoration(
                                         color: kSurface,
@@ -186,12 +206,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                         boxShadow: shadowXs,
                                       )
                                     : null,
-                                child: Text('Sign In',
-                                    style: headStyle(
-                                        size: 13,
-                                        weight: FontWeight.w700,
-                                        color: _isLogin ? kText : kMuted),
-                                    textAlign: TextAlign.center),
+                                child: Text(
+                                  'Sign In',
+                                  style: headStyle(
+                                    size: 13,
+                                    weight: FontWeight.w700,
+                                    color: _isLogin ? kText : kMuted,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
                           ),
@@ -199,8 +222,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             child: GestureDetector(
                               onTap: () => setState(() => _isLogin = false),
                               child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 9),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 9,
+                                ),
                                 decoration: !_isLogin
                                     ? BoxDecoration(
                                         color: kSurface,
@@ -208,12 +232,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                         boxShadow: shadowXs,
                                       )
                                     : null,
-                                child: Text('Register',
-                                    style: headStyle(
-                                        size: 13,
-                                        weight: FontWeight.w700,
-                                        color: !_isLogin ? kText : kMuted),
-                                    textAlign: TextAlign.center),
+                                child: Text(
+                                  'Register',
+                                  style: headStyle(
+                                    size: 13,
+                                    weight: FontWeight.w700,
+                                    color: !_isLogin ? kText : kMuted,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
                           ),
@@ -229,17 +256,19 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       _FieldLabel('PHONE'),
                       const SizedBox(height: 6),
                       _AppTextField(
-                          controller: _phoneCtrl,
-                          hint: '+1 555 000 0000',
-                          keyboardType: TextInputType.phone),
+                        controller: _phoneCtrl,
+                        hint: '+1 555 000 0000',
+                        keyboardType: TextInputType.phone,
+                      ),
                       const SizedBox(height: 14),
                     ],
                     _FieldLabel('EMAIL'),
                     const SizedBox(height: 6),
                     _AppTextField(
-                        controller: _emailCtrl,
-                        hint: 'you@email.com',
-                        keyboardType: TextInputType.emailAddress),
+                      controller: _emailCtrl,
+                      hint: 'you@email.com',
+                      keyboardType: TextInputType.emailAddress,
+                    ),
                     const SizedBox(height: 14),
                     _FieldLabel('PASSWORD'),
                     const SizedBox(height: 6),
@@ -250,9 +279,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       suffix: GestureDetector(
                         onTap: () => setState(() => _obscure = !_obscure),
                         child: Icon(
-                            _obscure ? Icons.visibility_off : Icons.visibility,
-                            color: kMuted,
-                            size: 18),
+                          _obscure ? Icons.visibility_off : Icons.visibility,
+                          color: kMuted,
+                          size: 18,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -262,18 +292,37 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       loading: _loading,
                     ),
                     const SizedBox(height: 16),
-                    Row(children: [
-                      Expanded(child: Divider(color: kBorder)),
-                      Padding(
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: kBorder)),
+                        Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('or continue as',
-                              style: bodyStyle(
-                                  size: 11,
-                                  weight: FontWeight.w600,
-                                  color: kMuted))),
-                      Expanded(child: Divider(color: kBorder)),
-                    ]),
+                          child: Text(
+                            'or continue as',
+                            style: bodyStyle(
+                              size: 11,
+                              weight: FontWeight.w600,
+                              color: kMuted,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: kBorder)),
+                      ],
+                    ),
                     const SizedBox(height: 12),
+                    // Social login buttons
+                    _SocialLoginButton(
+                      icon: _GoogleLogo(),
+                      label: 'Continue with Google',
+                      onTap: () => _socialSignIn('google'),
+                    ),
+                    const SizedBox(height: 10),
+                    _SocialLoginButton(
+                      icon: _AppleLogo(),
+                      label: 'Continue with Apple',
+                      onTap: () => _socialSignIn('apple'),
+                    ),
+                    const SizedBox(height: 10),
                     GestureDetector(
                       onTap: _continueAsGuest,
                       child: Container(
@@ -284,12 +333,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           border: Border.all(color: kBorder, width: 1.5),
                           borderRadius: BorderRadius.circular(rSm),
                         ),
-                        child: Text('👤 Continue as Guest (Demo)',
-                            style: headStyle(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.person, size: 16, color: kText2),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Continue as Guest (Demo)',
+                              style: headStyle(
                                 size: 13,
                                 weight: FontWeight.w700,
-                                color: kText2),
-                            textAlign: TextAlign.center),
+                                color: kText2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -310,28 +368,40 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('DEBUG LOGS',
-                                      style: headStyle(
-                                          size: 10,
-                                          weight: FontWeight.w800,
-                                          color: kCyan)),
+                                  Text(
+                                    'DEBUG LOGS',
+                                    style: headStyle(
+                                      size: 10,
+                                      weight: FontWeight.w800,
+                                      color: kCyan,
+                                    ),
+                                  ),
                                   GestureDetector(
                                     onTap: () => setState(() => _logs.clear()),
-                                    child: Text('CLEAR',
-                                        style: headStyle(
-                                            size: 10,
-                                            weight: FontWeight.w700,
-                                            color: Colors.white70)),
+                                    child: Text(
+                                      'CLEAR',
+                                      style: headStyle(
+                                        size: 10,
+                                        weight: FontWeight.w700,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              ..._logs.map((log) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 4),
-                                    child: Text(log,
-                                        style: bodyStyle(
-                                            size: 10, color: Colors.white70)),
-                                  )),
+                              ..._logs.map(
+                                (log) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    log,
+                                    style: bodyStyle(
+                                      size: 10,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -353,10 +423,13 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: headStyle(size: 11, weight: FontWeight.w800, color: kMuted)
-            .copyWith(letterSpacing: 0.8),
-      );
+    text,
+    style: headStyle(
+      size: 11,
+      weight: FontWeight.w800,
+      color: kMuted,
+    ).copyWith(letterSpacing: 0.8),
+  );
 }
 
 class _AppTextField extends StatelessWidget {
@@ -388,16 +461,21 @@ class _AppTextField extends StatelessWidget {
         fillColor: kBg,
         suffixIcon: suffix,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(rSm),
-            borderSide: BorderSide(color: kBorder, width: 1.5)),
+          borderRadius: BorderRadius.circular(rSm),
+          borderSide: BorderSide(color: kBorder, width: 1.5),
+        ),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(rSm),
-            borderSide: BorderSide(color: kBorder, width: 1.5)),
+          borderRadius: BorderRadius.circular(rSm),
+          borderSide: BorderSide(color: kBorder, width: 1.5),
+        ),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(rSm),
-            borderSide: const BorderSide(color: kCyan, width: 1.5)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          borderRadius: BorderRadius.circular(rSm),
+          borderSide: const BorderSide(color: kCyan, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
       ),
     );
   }
@@ -437,11 +515,128 @@ class _AppButton extends StatelessWidget {
                   ),
                 ),
               )
-            : Text(label,
+            : Text(
+                label,
                 style: headStyle(
-                    size: 14, weight: FontWeight.w700, color: Colors.white),
-                textAlign: TextAlign.center),
+                  size: 14,
+                  weight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
       ),
     );
+  }
+}
+
+class _SocialLoginButton extends StatelessWidget {
+  final Widget icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _SocialLoginButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: kSurface,
+          border: Border.all(color: kBorder, width: 1.5),
+          borderRadius: BorderRadius.circular(rSm),
+          boxShadow: shadowXs,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(width: 24, height: 24, child: icon),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: headStyle(
+                size: 13,
+                weight: FontWeight.w600,
+                color: kText2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GoogleLogo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(size: const Size(24, 24), painter: _GoogleLogoPainter());
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final path = Path();
+
+    // Blue
+    paint.color = const Color(0xFF4285F4);
+    path.addRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(0, 0, 10, 10),
+        const Radius.circular(2),
+      ),
+    );
+    canvas.drawPath(path, paint);
+
+    // Red
+    paint.color = const Color(0xFFEA4335);
+    path.reset();
+    path.addRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(10, 0, 10, 10),
+        const Radius.circular(2),
+      ),
+    );
+    canvas.drawPath(path, paint);
+
+    // Yellow
+    paint.color = const Color(0xFFFBBC05);
+    path.reset();
+    path.addRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(0, 10, 10, 10),
+        const Radius.circular(2),
+      ),
+    );
+    canvas.drawPath(path, paint);
+
+    // Green
+    paint.color = const Color(0xFF34A853);
+    path.reset();
+    path.addRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(10, 10, 10, 10),
+        const Radius.circular(2),
+      ),
+    );
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _AppleLogo extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Icon(Icons.apple, size: 24, color: Colors.black);
   }
 }
