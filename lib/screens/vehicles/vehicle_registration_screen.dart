@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/constants.dart';
 import '../../widgets/app_button.dart';
 
@@ -8,16 +9,19 @@ class VehicleRegistrationScreen extends ConsumerStatefulWidget {
   const VehicleRegistrationScreen({super.key});
 
   @override
-  ConsumerState<VehicleRegistrationScreen> createState() => _VehicleRegistrationScreenState();
+  ConsumerState<VehicleRegistrationScreen> createState() =>
+      _VehicleRegistrationScreenState();
 }
 
-class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationScreen> {
+class _VehicleRegistrationScreenState
+    extends ConsumerState<VehicleRegistrationScreen> {
   final _makeCtrl = TextEditingController();
   final _modelCtrl = TextEditingController();
   final _yearCtrl = TextEditingController();
   final _colorCtrl = TextEditingController();
   final _plateCtrl = TextEditingController();
   bool _loading = false;
+  String? _photoPath;
 
   @override
   void dispose() {
@@ -27,6 +31,14 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
     _colorCtrl.dispose();
     _plateCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickPhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _photoPath = pickedFile.path);
+    }
   }
 
   Future<void> _registerVehicle() async {
@@ -41,11 +53,11 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
       return;
     }
     setState(() => _loading = true);
-    
-    // TODO: Save to Supabase vehicles table
+
+    // TODO: Save to Supabase vehicles table with photo upload
     // For now, just navigate back
     await Future.delayed(const Duration(seconds: 1));
-    
+
     setState(() => _loading = false);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -84,25 +96,77 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
               const SizedBox(height: 30),
               const Icon(Icons.directions_car, size: 64, color: kCyan),
               const SizedBox(height: 20),
-              Text('Add Your Vehicle',
-                  style: headStyle(size: 24, weight: FontWeight.w900)),
+              Text(
+                'Add Your Vehicle',
+                style: headStyle(size: 24, weight: FontWeight.w900),
+              ),
               const SizedBox(height: 8),
-              Text('Register your car for easy booking',
-                  style: bodyStyle(size: 13, color: kMuted)),
+              Text(
+                'Register your car for easy booking',
+                style: bodyStyle(size: 13, color: kMuted),
+              ),
               const SizedBox(height: 30),
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      // Photo upload
+                      GestureDetector(
+                        onTap: _pickPhoto,
+                        child: Container(
+                          width: double.infinity,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: kSurface,
+                            border: Border.all(color: kBorder, width: 1.5),
+                            borderRadius: BorderRadius.circular(rMd),
+                          ),
+                          child: _photoPath != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(rMd),
+                                  child: Image.network(
+                                    _photoPath!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.camera_alt,
+                                      size: 40,
+                                      color: kMuted,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Tap to add photo',
+                                      style: bodyStyle(size: 12, color: kMuted),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       _buildTextField('Make', 'e.g., Toyota', _makeCtrl),
                       const SizedBox(height: 12),
                       _buildTextField('Model', 'e.g., Corolla', _modelCtrl),
                       const SizedBox(height: 12),
-                      _buildTextField('Year', 'e.g., 2020', _yearCtrl, keyboardType: TextInputType.number, maxLength: 4),
+                      _buildTextField(
+                        'Year',
+                        'e.g., 2020',
+                        _yearCtrl,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
+                      ),
                       const SizedBox(height: 12),
                       _buildTextField('Color', 'e.g., White', _colorCtrl),
                       const SizedBox(height: 12),
-                      _buildTextField('License Plate', 'e.g., AB 123 CD', _plateCtrl, textUpperCase: true),
+                      _buildTextField(
+                        'License Plate',
+                        'e.g., AB 123 CD',
+                        _plateCtrl,
+                        textUpperCase: true,
+                      ),
                       const SizedBox(height: 30),
                       AppButton(
                         label: 'Register Vehicle',
@@ -131,31 +195,44 @@ class _VehicleRegistrationScreenState extends ConsumerState<VehicleRegistrationS
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: headStyle(size: 10, weight: FontWeight.w800, color: kMuted)
-                .copyWith(letterSpacing: 0.8)),
+        Text(
+          label,
+          style: headStyle(
+            size: 10,
+            weight: FontWeight.w800,
+            color: kMuted,
+          ).copyWith(letterSpacing: 0.8),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
           style: bodyStyle(size: 14),
           keyboardType: keyboardType,
           maxLength: maxLength,
-          textCapitalization: textUpperCase ? TextCapitalization.characters : TextCapitalization.none,
+          textCapitalization: textUpperCase
+              ? TextCapitalization.characters
+              : TextCapitalization.none,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: bodyStyle(size: 14, color: kMuted),
             filled: true,
             fillColor: kSurface,
             border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(rSm),
-                borderSide: BorderSide(color: kBorder, width: 1.5)),
+              borderRadius: BorderRadius.circular(rSm),
+              borderSide: BorderSide(color: kBorder, width: 1.5),
+            ),
             enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(rSm),
-                borderSide: BorderSide(color: kBorder, width: 1.5)),
+              borderRadius: BorderRadius.circular(rSm),
+              borderSide: BorderSide(color: kBorder, width: 1.5),
+            ),
             focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(rSm),
-                borderSide: const BorderSide(color: kCyan, width: 1.5)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              borderRadius: BorderRadius.circular(rSm),
+              borderSide: const BorderSide(color: kCyan, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
           ),
         ),
       ],

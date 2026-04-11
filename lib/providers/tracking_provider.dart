@@ -19,6 +19,8 @@ class TrackingState {
   final String driverName;
   final String driverPlate;
   final double driverRating;
+  // Key status for car wash
+  final String keyStatus; // with_customer, with_driver, at_wash, returned
 
   const TrackingState({
     this.userPos = const LatLng(kDefaultLat, kDefaultLng),
@@ -30,6 +32,7 @@ class TrackingState {
     this.driverName = 'Luca R.',
     this.driverPlate = 'AB 123 CD',
     this.driverRating = 4.9,
+    this.keyStatus = 'with_customer',
   });
 
   TrackingState copyWith({
@@ -42,18 +45,19 @@ class TrackingState {
     String? driverName,
     String? driverPlate,
     double? driverRating,
-  }) =>
-      TrackingState(
-        userPos: userPos ?? this.userPos,
-        driverPos: driverPos ?? this.driverPos,
-        routeCoords: routeCoords ?? this.routeCoords,
-        simIndex: simIndex ?? this.simIndex,
-        phase: phase ?? this.phase,
-        etaMinutes: etaMinutes ?? this.etaMinutes,
-        driverName: driverName ?? this.driverName,
-        driverPlate: driverPlate ?? this.driverPlate,
-        driverRating: driverRating ?? this.driverRating,
-      );
+    String? keyStatus,
+  }) => TrackingState(
+    userPos: userPos ?? this.userPos,
+    driverPos: driverPos ?? this.driverPos,
+    routeCoords: routeCoords ?? this.routeCoords,
+    simIndex: simIndex ?? this.simIndex,
+    phase: phase ?? this.phase,
+    etaMinutes: etaMinutes ?? this.etaMinutes,
+    driverName: driverName ?? this.driverName,
+    driverPlate: driverPlate ?? this.driverPlate,
+    driverRating: driverRating ?? this.driverRating,
+    keyStatus: keyStatus ?? this.keyStatus,
+  );
 }
 
 class TrackingNotifier extends StateNotifier<TrackingState> {
@@ -79,20 +83,37 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       simIndex: 0,
       phase: TrackingPhase.toPickup,
       etaMinutes: 8,
+      keyStatus: 'with_customer',
     );
 
     _runSimulation(userPos);
     _subscribeRealtime();
   }
 
+  void updateKeyStatus(String status) {
+    state = state.copyWith(keyStatus: status);
+    _updateOrderKeyStatus(status);
+  }
+
+  Future<void> _updateOrderKeyStatus(String status) async {
+    try {
+      final sb = _ref.read(supabaseProvider);
+      final order = _ref.read(orderProvider).currentOrder;
+      if (order == null) return;
+      await sb.from('orders').update({'key_status': status}).eq('id', order.id);
+    } catch (_) {}
+  }
+
   List<LatLng> _interpolate(LatLng from, LatLng to, int steps) {
     final coords = <LatLng>[];
     for (int i = 0; i <= steps; i++) {
       final t = i / steps;
-      coords.add(LatLng(
-        from.latitude + (to.latitude - from.latitude) * t,
-        from.longitude + (to.longitude - from.longitude) * t,
-      ));
+      coords.add(
+        LatLng(
+          from.latitude + (to.latitude - from.latitude) * t,
+          from.longitude + (to.longitude - from.longitude) * t,
+        ),
+      );
     }
     return coords;
   }
@@ -134,7 +155,10 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     final hubPos = const LatLng(kHubLat, kHubLng);
     final route = _interpolate(userPos, hubPos, 80);
     state = state.copyWith(
-        routeCoords: route, simIndex: 0, phase: TrackingPhase.toHub);
+      routeCoords: route,
+      simIndex: 0,
+      phase: TrackingPhase.toHub,
+    );
 
     _simTimer = Timer.periodic(const Duration(milliseconds: 600), (timer) {
       if (!mounted) {
@@ -147,8 +171,10 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
         _onAtHub();
         return;
       }
-      state =
-          state.copyWith(driverPos: state.routeCoords[idx], simIndex: idx + 1);
+      state = state.copyWith(
+        driverPos: state.routeCoords[idx],
+        simIndex: idx + 1,
+      );
     });
 
     // Update order status
@@ -169,13 +195,17 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       final sb = _ref.read(supabaseProvider);
       final order = _ref.read(orderProvider).currentOrder;
       if (order == null) return;
-      await sb.from('orders').update({
-        'status': status,
-        'updated_at': DateTime.now().toIso8601String()
-      }).eq('id', order.id);
       await sb
-          .from('order_status_history')
-          .insert({'order_id': order.id, 'status': status});
+          .from('orders')
+          .update({
+            'status': status,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', order.id);
+      await sb.from('order_status_history').insert({
+        'order_id': order.id,
+        'status': status,
+      });
     } catch (_) {}
   }
 
@@ -193,9 +223,10 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
             schema: 'public',
             table: 'orders',
             filter: PostgresChangeFilter(
-                type: PostgresChangeFilterType.eq,
-                column: 'id',
-                value: order.id),
+              type: PostgresChangeFilterType.eq,
+              column: 'id',
+              value: order.id,
+            ),
             callback: (payload) {
               final newStatus = payload.newRecord['status'] as String?;
               if (newStatus != null) {
@@ -210,7 +241,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   void stopTracking() {
     _simTimer?.cancel();
     _realtimeSub?.cancel();
-    state = const TrackingState();
+    state = const TrackingState(keyStatus: 'with_customer');
   }
 
   @override
