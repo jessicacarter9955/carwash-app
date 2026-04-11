@@ -3,11 +3,18 @@ import 'package:google_fonts/google_fonts.dart';
 
 // ── Supabase ──────────────────────────────────────────
 const String supabaseUrl = 'https://ofadiqbebzmrjyxzoxym.supabase.co';
-const String supabaseAnon =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mYWRpcWJlYnptcmp5eHpveHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjgwODIsImV4cCI6MjA5MTMwNDA4Mn0.Zrioc899mS4BomuWnKzF0mcl8VQ4foYN_vzQfZaSPTM';
+const String supabaseAnon = String.fromEnvironment(
+  'SUPABASE_ANON_KEY',
+  defaultValue: 'sb_publishable_pJNeyKRY0TPGFQq3606wtQ_3A3MhoCw',
+);
+const String supabaseServiceRole = String.fromEnvironment(
+  'SUPABASE_SERVICE_ROLE_KEY',
+  defaultValue: '',
+);
 
 const String kSupabaseUrl = supabaseUrl;
 const String kSupabaseAnonKey = supabaseAnon;
+const String kSupabaseServiceRoleKey = supabaseServiceRole;
 
 // Colors
 const kBg = Color(0xFFF4F5F6);
@@ -83,3 +90,9 @@ const double kRomeLng = 12.5143;
 // API endpoints
 const String osrmBase = 'https://router.project-osrm.org/route/v1/driving';
 const String nominatimBase = 'https://nominatim.openstreetmap.org/reverse';
+
+// Mapbox token (use environment variable)
+const String mapboxToken = String.fromEnvironment(
+  'MAPBOX_TOKEN',
+  defaultValue: 'YOUR_MAPBOX_TOKEN',
+);

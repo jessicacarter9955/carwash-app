@@ -36,6 +36,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Move map camera when location changes
+    ref.listen(locationProvider, (previous, next) {
+      if (previous != null && previous.lat != next.lat) {
+        _mapController.move(LatLng(next.lat, next.lng), 15);
+      }
+    });
+  }
+
   Future<void> _checkNotificationPermission() async {
     // Check if we should show the prompt (only show once)
     final prefs = await SharedPreferences.getInstance();
@@ -78,7 +89,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
                 userAgentPackageName: 'com.washgo.app',
               ),
               MarkerLayer(

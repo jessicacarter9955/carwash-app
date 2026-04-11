@@ -29,20 +29,17 @@ class WashGoMap extends StatelessWidget {
         initialCenter: center,
         initialZoom: zoom,
         interactionOptions: InteractionOptions(
-          flags: interactive
-              ? InteractiveFlag.all
-              : InteractiveFlag.none,
+          flags: interactive ? InteractiveFlag.all : InteractiveFlag.none,
         ),
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate:
+              'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
           userAgentPackageName: 'com.washgo.app',
         ),
-        if (polylines.isNotEmpty)
-          PolylineLayer(polylines: polylines),
-        if (markers.isNotEmpty)
-          MarkerLayer(markers: markers),
+        if (polylines.isNotEmpty) PolylineLayer(polylines: polylines),
+        if (markers.isNotEmpty) MarkerLayer(markers: markers),
       ],
     );
   }
@@ -50,40 +47,43 @@ class WashGoMap extends StatelessWidget {
 
 // ── Helper marker builders ─────────────────────────────
 Marker userMarker(LatLng pos) => Marker(
-      point: pos,
-      width: 26,
-      height: 26,
-      child: _CircleMarker(bg: kMint, child: '👤', size: 12),
-    );
+  point: pos,
+  width: 26,
+  height: 26,
+  child: _CircleMarker(bg: kMint, child: '👤', size: 12),
+);
 
 Marker carMarker(LatLng pos) => Marker(
-      point: pos,
-      width: 34,
-      height: 34,
-      child: _CircleMarker(bg: kCyan3, child: '🚗', size: 16),
-    );
+  point: pos,
+  width: 34,
+  height: 34,
+  child: _CircleMarker(bg: kCyan3, child: '🚗', size: 16),
+);
 
 Marker destMarker(LatLng pos) => Marker(
-      point: pos,
-      width: 26,
-      height: 26,
-      child: _CircleMarker(bg: kRed, child: '🏁', size: 12),
-    );
+  point: pos,
+  width: 26,
+  height: 26,
+  child: _CircleMarker(bg: kRed, child: '🏁', size: 12),
+);
 
 Marker hubMarker(LatLng pos) => Marker(
-      point: pos,
-      width: 28,
-      height: 28,
-      child: _CircleMarker(bg: kOrange, child: '🏭', size: 14),
-    );
+  point: pos,
+  width: 28,
+  height: 28,
+  child: _CircleMarker(bg: kOrange, child: '🏭', size: 14),
+);
 
 class _CircleMarker extends StatelessWidget {
   final Color bg;
   final String child;
   final double size;
 
-  const _CircleMarker(
-      {required this.bg, required this.child, required this.size});
+  const _CircleMarker({
+    required this.bg,
+    required this.child,
+    required this.size,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -94,9 +94,10 @@ class _CircleMarker extends StatelessWidget {
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-              color: bg.withOpacity(.4),
-              blurRadius: 8,
-              offset: const Offset(0, 3))
+            color: bg.withOpacity(.4),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Center(
