@@ -38,7 +38,9 @@ class OrderNotifier extends StateNotifier<OrderState> {
     try {
       final sb = _ref.read(supabaseProvider);
       final session = await _ref.read(authStateProvider.future);
-      if (session == null) throw Exception('Not authenticated');
+      // Use demo customer ID if not authenticated
+      final customerId =
+          session?.user.id ?? '00000000-0000-0000-0000-000000000001';
 
       final cart = _ref.read(cartProvider);
       final location = _ref.read(locationProvider);
@@ -46,7 +48,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       final data = await sb
           .from('orders')
           .insert({
-            'customer_id': session.user.id,
+            'customer_id': customerId,
             'status': 'pending',
             'service_type': cart.selectedService,
             'items': cart.itemsMap,
