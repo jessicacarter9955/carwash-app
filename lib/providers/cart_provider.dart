@@ -110,7 +110,7 @@ class CartNotifier extends StateNotifier<CartState> {
         items[idx] = CartItemDefinition(
           key: p.itemKey,
           name: p.itemName,
-          emoji: items[idx].emoji,
+          icon: items[idx].icon,
           price: p.price,
         );
       }
