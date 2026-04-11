@@ -258,21 +258,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Row(
                     children: [
                       _ServiceTab(
-                        emoji: '🚗',
+                        icon: Icons.directions_car,
                         label: 'Car Wash',
                         active: true,
                         onTap: () => context.push('/items'),
                       ),
                       const SizedBox(width: 8),
                       _ServiceTab(
-                        emoji: '⚡',
+                        icon: Icons.flash_on,
                         label: 'Express',
                         onTap: () =>
                             showToast(context, '⚡ Express coming soon!'),
                       ),
                       const SizedBox(width: 8),
                       _ServiceTab(
-                        emoji: '🗓',
+                        icon: Icons.calendar_month,
                         label: 'Schedule',
                         onTap: () =>
                             showToast(context, '🗓 Schedule coming soon!'),
@@ -342,19 +342,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Row(
                     children: [
                       _QuickTile(
-                        emoji: '📦',
+                        icon: Icons.local_shipping,
                         label: 'Track',
                         onTap: () => context.push('/tracking'),
                       ),
                       const SizedBox(width: 8),
                       _QuickTile(
-                        emoji: '📋',
+                        icon: Icons.list_alt,
                         label: 'Orders',
                         onTap: () => context.push('/orders'),
                       ),
                       const SizedBox(width: 8),
                       _QuickTile(
-                        emoji: '👤',
+                        icon: Icons.person,
                         label: 'Profile',
                         onTap: () => context.push('/profile'),
                       ),
@@ -448,12 +448,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 class _ServiceTab extends StatelessWidget {
-  final String emoji, label;
+  final IconData icon;
+  final String label;
   final bool active;
   final VoidCallback onTap;
 
   const _ServiceTab({
-    required this.emoji,
+    required this.icon,
     required this.label,
     this.active = false,
     required this.onTap,
@@ -477,7 +478,7 @@ class _ServiceTab extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 20)),
+              Icon(icon, size: 20, color: active ? kCyan3 : kMuted),
               const SizedBox(height: 4),
               Text(
                 label,
@@ -496,10 +497,11 @@ class _ServiceTab extends StatelessWidget {
 }
 
 class _QuickTile extends StatelessWidget {
-  final String emoji, label;
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
   const _QuickTile({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.onTap,
   });
@@ -518,7 +520,7 @@ class _QuickTile extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 16)),
+              Icon(icon, size: 16, color: kMuted),
               const SizedBox(height: 2),
               Text(
                 label,

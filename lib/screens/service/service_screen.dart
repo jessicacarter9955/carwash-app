@@ -19,19 +19,19 @@ class ServiceScreen extends ConsumerWidget {
         'key': 'standard',
         'name': 'Standard Wash',
         'desc': 'Ready in 48h · Pickup & delivery included',
-        'extra': 0.0
+        'extra': 0.0,
       },
       {
         'key': 'express',
-        'name': 'Express Wash ⚡',
+        'name': 'Express Wash',
         'desc': 'Ready in 24h · Priority driver',
-        'extra': 4.9
+        'extra': 4.9,
       },
       {
-        'key': 'dryclean',
-        'name': 'Dry Cleaning 🌟',
+        'key': 'premium',
+        'name': 'Premium Wash',
         'desc': 'Delicate fabrics · Special treatment',
-        'extra': 7.5
+        'extra': 7.5,
       },
     ];
 
@@ -40,18 +40,18 @@ class ServiceScreen extends ConsumerWidget {
         'key': 'fold',
         'name': 'Folding & Packaging',
         'desc': 'Neatly folded in eco bags',
-        'price': 2.0
+        'price': 2.0,
       },
       {
         'key': 'scent',
         'name': 'Premium Scent',
         'desc': 'Lavender, Cotton Fresh or Sport',
-        'price': 1.5
+        'price': 1.5,
       },
     ];
 
     const timeSlots = [
-      {'label': '⚡ ASAP', 'sub': '~30 min', 'value': 'ASAP ~30min'},
+      {'label': 'ASAP', 'sub': '~30 min', 'value': 'ASAP ~30min'},
       {'label': '10:00 – 12:00', 'sub': 'Today', 'value': '10:00 – 12:00'},
       {'label': '14:00 – 16:00', 'sub': 'Today', 'value': '14:00 – 16:00'},
       {'label': '09:00 – 11:00', 'sub': 'Tomorrow', 'value': '09:00 – 11:00'},
@@ -64,36 +64,48 @@ class ServiceScreen extends ConsumerWidget {
           Container(
             color: kBg.withOpacity(0.95),
             padding: EdgeInsets.fromLTRB(
-                14, MediaQuery.of(context).padding.top + 12, 14, 10),
-            child: Row(children: [
-              const BackButtonWidget(),
-              const SizedBox(width: 10),
-              Text('Service Type',
-                  style: headStyle(size: 16, weight: FontWeight.w800)),
-            ]),
+              14,
+              MediaQuery.of(context).padding.top + 12,
+              14,
+              10,
+            ),
+            child: Row(
+              children: [
+                const BackButtonWidget(),
+                const SizedBox(width: 10),
+                Text(
+                  'Service Type',
+                  style: headStyle(size: 16, weight: FontWeight.w800),
+                ),
+              ],
+            ),
           ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 100),
               children: [
                 _SectionLabel('Select a service'),
-                ...services.map((s) => _SvcOption(
-                      label: s['name'] as String,
-                      desc: s['desc'] as String,
-                      price: s['extra'] as double == 0
-                          ? '+\$0'
-                          : '+\$${(s['extra'] as double).toStringAsFixed(2)}',
-                      selected: cart.selectedService == s['key'],
-                      onTap: () => notifier.selectService(s['key'] as String),
-                    )),
+                ...services.map(
+                  (s) => _SvcOption(
+                    label: s['name'] as String,
+                    desc: s['desc'] as String,
+                    price: s['extra'] as double == 0
+                        ? '+\$0'
+                        : '+\$${(s['extra'] as double).toStringAsFixed(2)}',
+                    selected: cart.selectedService == s['key'],
+                    onTap: () => notifier.selectService(s['key'] as String),
+                  ),
+                ),
                 _SectionLabel('Add-ons'),
-                ...addons.map((a) => _SvcOption(
-                      label: a['name'] as String,
-                      desc: a['desc'] as String,
-                      price: '+\$${(a['price'] as double).toStringAsFixed(2)}',
-                      selected: cart.addons.contains(a['key']),
-                      onTap: () => notifier.toggleAddon(a['key'] as String),
-                    )),
+                ...addons.map(
+                  (a) => _SvcOption(
+                    label: a['name'] as String,
+                    desc: a['desc'] as String,
+                    price: '+\$${(a['price'] as double).toStringAsFixed(2)}',
+                    selected: cart.addons.contains(a['key']),
+                    onTap: () => notifier.toggleAddon(a['key'] as String),
+                  ),
+                ),
                 _SectionLabel('Pickup Time'),
                 GridView.count(
                   shrinkWrap: true,
@@ -103,12 +115,14 @@ class ServiceScreen extends ConsumerWidget {
                   crossAxisSpacing: 8,
                   childAspectRatio: 2.5,
                   children: timeSlots
-                      .map((t) => _TimeSlot(
-                            label: t['label']!,
-                            sub: t['sub']!,
-                            selected: cart.selectedTime == t['value'],
-                            onTap: () => notifier.selectTime(t['value']!),
-                          ))
+                      .map(
+                        (t) => _TimeSlot(
+                          label: t['label']!,
+                          sub: t['sub']!,
+                          selected: cart.selectedTime == t['value'],
+                          onTap: () => notifier.selectTime(t['value']!),
+                        ),
+                      )
                       .toList(),
                 ),
                 const SizedBox(height: 80),
@@ -119,13 +133,15 @@ class ServiceScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [kBg, kBg.withOpacity(0)]),
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [kBg, kBg.withOpacity(0)],
+              ),
             ),
             child: AppButton(
-                label: 'Review Order →',
-                onTap: () => context.push('/checkout')),
+              label: 'Review Order →',
+              onTap: () => context.push('/checkout'),
+            ),
           ),
         ],
       ),
@@ -138,11 +154,16 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 14, bottom: 8),
-        child: Text(text.toUpperCase(),
-            style: headStyle(size: 10, weight: FontWeight.w800, color: kMuted)
-                .copyWith(letterSpacing: 1.2)),
-      );
+    padding: const EdgeInsets.only(top: 14, bottom: 8),
+    child: Text(
+      text.toUpperCase(),
+      style: headStyle(
+        size: 10,
+        weight: FontWeight.w800,
+        color: kMuted,
+      ).copyWith(letterSpacing: 1.2),
+    ),
+  );
 }
 
 class _SvcOption extends StatelessWidget {
@@ -150,12 +171,13 @@ class _SvcOption extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _SvcOption(
-      {required this.label,
-      required this.desc,
-      required this.price,
-      required this.selected,
-      required this.onTap});
+  const _SvcOption({
+    required this.label,
+    required this.desc,
+    required this.price,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -181,15 +203,18 @@ class _SvcOption extends StatelessWidget {
               height: 16,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border:
-                    Border.all(color: selected ? kCyan : kBorder2, width: 2),
+                border: Border.all(
+                  color: selected ? kCyan : kBorder2,
+                  width: 2,
+                ),
                 color: selected ? kCyan : Colors.transparent,
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                            color: kCyan.withOpacity(0.2),
-                            blurRadius: 6,
-                            spreadRadius: 2)
+                          color: kCyan.withOpacity(0.2),
+                          blurRadius: 6,
+                          spreadRadius: 2,
+                        ),
                       ]
                     : [],
               ),
@@ -199,15 +224,22 @@ class _SvcOption extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: headStyle(size: 13, weight: FontWeight.w700)),
+                  Text(
+                    label,
+                    style: headStyle(size: 13, weight: FontWeight.w700),
+                  ),
                   Text(desc, style: bodyStyle(size: 11, color: kMuted)),
                 ],
               ),
             ),
-            Text(price,
-                style: headStyle(
-                    size: 13, weight: FontWeight.w800, color: kCyan3)),
+            Text(
+              price,
+              style: headStyle(
+                size: 13,
+                weight: FontWeight.w800,
+                color: kCyan3,
+              ),
+            ),
           ],
         ),
       ),
@@ -219,11 +251,12 @@ class _TimeSlot extends StatelessWidget {
   final String label, sub;
   final bool selected;
   final VoidCallback onTap;
-  const _TimeSlot(
-      {required this.label,
-      required this.sub,
-      required this.selected,
-      required this.onTap});
+  const _TimeSlot({
+    required this.label,
+    required this.sub,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -242,11 +275,14 @@ class _TimeSlot extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: headStyle(
-                    size: 12,
-                    weight: FontWeight.w700,
-                    color: selected ? kCyan3 : kText)),
+            Text(
+              label,
+              style: headStyle(
+                size: 12,
+                weight: FontWeight.w700,
+                color: selected ? kCyan3 : kText,
+              ),
+            ),
             Text(sub, style: bodyStyle(size: 10, color: kMuted)),
           ],
         ),

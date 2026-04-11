@@ -127,7 +127,7 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 
   void selectService(String type) {
-    const prices = {'standard': 0.0, 'express': 4.9, 'dryclean': 7.5};
+    const prices = {'standard': 0.0, 'express': 4.9, 'premium': 7.5};
     state = state.copyWith(
       selectedService: type,
       serviceExtra: prices[type] ?? 0,

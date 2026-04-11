@@ -59,7 +59,7 @@ class ItemsScreen extends ConsumerWidget {
                 ...cart.items.map((item) {
                   final qty = cart.quantities[item.key] ?? 0;
                   return _ItemRow(
-                    emoji: item.emoji,
+                    icon: item.icon,
                     name: item.name,
                     price: item.price,
                     qty: qty,
@@ -122,14 +122,15 @@ class ItemsScreen extends ConsumerWidget {
 }
 
 class _ItemRow extends StatelessWidget {
-  final String emoji, name;
+  final IconData icon;
+  final String name;
   final double price;
   final int qty;
   final bool selected;
   final VoidCallback onMinus, onPlus;
 
   const _ItemRow({
-    required this.emoji,
+    required this.icon,
     required this.name,
     required this.price,
     required this.qty,
@@ -152,7 +153,7 @@ class _ItemRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)),
+          Icon(icon, size: 22, color: kCyan),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
