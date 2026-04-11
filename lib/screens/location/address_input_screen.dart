@@ -36,9 +36,12 @@ class _AddressInputScreenState extends ConsumerState<AddressInputScreen> {
       );
       return;
     }
-    // For demo purposes, just use the address text
-    // In production, you'd geocode this to lat/lng
-    ref.read(locationProvider.notifier).updateAddress(_addressCtrl.text.trim());
+    setState(() => _loading = true);
+    // Geocode the address to get lat/lng coordinates
+    await ref
+        .read(locationProvider.notifier)
+        .geocodeAddress(_addressCtrl.text.trim());
+    setState(() => _loading = false);
     if (mounted) context.pop();
   }
 

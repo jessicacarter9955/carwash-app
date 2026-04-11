@@ -82,6 +82,33 @@ class LocationNotifier extends StateNotifier<LocationState> {
   void updateAddress(String address) {
     state = state.copyWith(address: address, loading: false);
   }
+
+  Future<void> geocodeAddress(String address) async {
+    state = state.copyWith(loading: true);
+    try {
+      final locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        final loc = locations.first;
+        state = state.copyWith(
+          lat: loc.latitude,
+          lng: loc.longitude,
+          address: address,
+          loading: false,
+        );
+      } else {
+        state = state.copyWith(
+          address: address,
+          loading: false,
+        );
+      }
+    } catch (e) {
+      // If geocoding fails, just update the address
+      state = state.copyWith(
+        address: address,
+        loading: false,
+      );
+    }
+  }
 }
 
 final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>(
