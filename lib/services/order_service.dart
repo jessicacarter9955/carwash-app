@@ -12,8 +12,9 @@ class OrderService {
     required double lat,
     required double lng,
   }) {
+    final now = DateTime.now();
     return OrderModel(
-      id: 'demo-order-${DateTime.now().millisecondsSinceEpoch}',
+      id: 'demo-order-${now.millisecondsSinceEpoch}',
       customerId: customerId,
       status: 'confirmed',
       serviceType: serviceType,
@@ -29,7 +30,8 @@ class OrderService {
       pickupSlot: 'ASAP',
       paymentMethod: 'card',
       paymentStatus: 'paid',
-      createdAt: DateTime.now(),
+      createdAt: now,
+      updatedAt: now,
     );
   }
 
@@ -74,8 +76,10 @@ class OrderService {
   // ── Accept order (driver) ────────────────────────────
   static Future<void> acceptOrder(String orderId, String driverId) async {
     try {
-      await sb.from('orders').update(
-          {'driver_id': driverId, 'status': 'confirmed'}).eq('id', orderId);
+      await sb
+          .from('orders')
+          .update({'driver_id': driverId, 'status': 'confirmed'})
+          .eq('id', orderId);
     } catch (_) {}
   }
 }
