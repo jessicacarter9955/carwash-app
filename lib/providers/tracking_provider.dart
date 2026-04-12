@@ -109,9 +109,11 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
   Future<void> _updateOrderKeyStatus(String status) async {
     try {
-      final sb = _ref.read(supabaseProvider);
       final order = _ref.read(orderProvider).currentOrder;
       if (order == null) return;
+      // Skip backend update for local orders
+      if (order.id.startsWith('local-')) return;
+      final sb = _ref.read(supabaseProvider);
       await sb.from('orders').update({'key_status': status}).eq('id', order.id);
     } catch (_) {}
   }
@@ -209,9 +211,11 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
   Future<void> _updateOrderStatus(String status) async {
     try {
-      final sb = _ref.read(supabaseProvider);
       final order = _ref.read(orderProvider).currentOrder;
       if (order == null) return;
+      // Skip backend update for local orders
+      if (order.id.startsWith('local-')) return;
+      final sb = _ref.read(supabaseProvider);
       await sb
           .from('orders')
           .update({
@@ -228,10 +232,12 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
   void _subscribeRealtime() {
     try {
-      final sb = _ref.read(supabaseProvider);
       final order = _ref.read(orderProvider).currentOrder;
       if (order == null) return;
+      // Skip realtime subscription for local orders
+      if (order.id.startsWith('local-')) return;
 
+      final sb = _ref.read(supabaseProvider);
       _realtimeSub?.cancel();
       sb
           .channel('order-${order.id}')

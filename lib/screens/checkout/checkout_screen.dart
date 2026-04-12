@@ -175,7 +175,7 @@ class CheckoutScreen extends ConsumerWidget {
                 }
                 final success = await ref
                     .read(orderProvider.notifier)
-                    .placeOrder();
+                    .placeOrder(localMode: true);
                 if (success && context.mounted) {
                   ref.read(cartProvider.notifier).reset();
                   context.push('/searching');

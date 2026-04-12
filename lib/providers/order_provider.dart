@@ -35,18 +35,44 @@ class OrderNotifier extends StateNotifier<OrderState> {
   final Ref _ref;
   OrderNotifier(this._ref) : super(const OrderState());
 
-  Future<bool> placeOrder() async {
+  Future<bool> placeOrder({bool localMode = true}) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      // Use service role client to bypass RLS (temporary)
-      final sb = sbServiceRole;
+      final cart = _ref.read(cartProvider);
+      final location = _ref.read(locationProvider);
       final session = await _ref.read(authStateProvider.future);
-      // Use demo customer ID if not authenticated
       final customerId =
           session?.user.id ?? '00000000-0000-0000-0000-000000000001';
 
-      final cart = _ref.read(cartProvider);
-      final location = _ref.read(locationProvider);
+      if (localMode) {
+        // Local mode: skip backend, create local order
+        final order = OrderModel(
+          id: 'local-${DateTime.now().millisecondsSinceEpoch}',
+          customerId: customerId,
+          status: 'pending',
+          serviceType: cart.selectedService,
+          items: cart.itemsMap,
+          subtotal: cart.itemsTotal,
+          serviceFee: cart.serviceExtra,
+          addonFee: cart.addonExtra,
+          deliveryFee: 2.99,
+          total: cart.total,
+          pickupAddress: location.address,
+          pickupLat: location.lat,
+          pickupLng: location.lng,
+          pickupSlot: cart.selectedTime,
+          paymentMethod: cart.selectedPaymentMethod,
+          paymentStatus: 'paid',
+          driverId: 'demo-driver',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        state = state.copyWith(currentOrder: order, loading: false);
+        return true;
+      }
+
+      // Backend mode: Use service role client to bypass RLS
+      final sb = sbServiceRole;
 
       final data = await sb
           .from('orders')

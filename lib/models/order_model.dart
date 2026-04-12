@@ -17,6 +17,7 @@ class OrderModel {
   final String paymentMethod;
   final String paymentStatus;
   final DateTime createdAt;
+  final DateTime updatedAt;
   // Vehicle fields for car wash
   final String? vehicleId;
   final String? vehicleMake;
@@ -45,6 +46,7 @@ class OrderModel {
     required this.paymentMethod,
     required this.paymentStatus,
     required this.createdAt,
+    required this.updatedAt,
     this.vehicleId,
     this.vehicleMake,
     this.vehicleModel,
@@ -73,6 +75,7 @@ class OrderModel {
     paymentMethod: m['payment_method'] ?? 'card',
     paymentStatus: m['payment_status'] ?? 'pending',
     createdAt: DateTime.tryParse(m['created_at'] ?? '') ?? DateTime.now(),
+    updatedAt: DateTime.tryParse(m['updated_at'] ?? '') ?? DateTime.now(),
     vehicleId: m['vehicle_id'],
     vehicleMake: m['vehicle_make'],
     vehicleModel: m['vehicle_model'],
