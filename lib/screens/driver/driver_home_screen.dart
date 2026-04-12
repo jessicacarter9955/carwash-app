@@ -10,12 +10,13 @@ import '../../services/driver_service.dart';
 import '../../state/app_state.dart';
 import '../../widgets/map_widget.dart';
 import '../../widgets/stat_tile.dart';
-import '../../widgets/toast_overlay.dart';
+import '../../widgets/app_toast.dart';
 import 'driver_view.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   final Function(DScreen) onNav;
   const DriverHomeScreen({super.key, required this.onNav});
+
   @override
   ConsumerState<DriverHomeScreen> createState() => _DriverHomeScreenState();
 }
@@ -25,9 +26,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
   int _countdown = 15;
   Timer? _cdTimer;
 
-  // Mock incoming job
   String _reqCust = 'Alex M.';
-  String _reqPrice = '\$12.50';
+  String _reqPrice = '€12.50';
   String _reqDist = '2.3 km · est. 8 min';
 
   void _showIncoming() {
@@ -38,7 +38,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
     setState(() {
       _showReq = true;
       _reqCust = names[DateTime.now().second % names.length];
-      _reqPrice = '\$$price';
+      _reqPrice = '€$price';
       _reqDist = '$dist km · est. ${(5 + DateTime.now().second % 15)} min';
       _countdown = 15;
     });
@@ -56,13 +56,13 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
   void _declineReq() {
     _cdTimer?.cancel();
     setState(() => _showReq = false);
-    showToast('❌ Request declined');
+    showToast(context, '❌ Request declined');
   }
 
   void _acceptReq() {
     _cdTimer?.cancel();
     setState(() => _showReq = false);
-    showToast('✅ Job accepted!');
+    showToast(context, '✅ Job accepted!');
     widget.onNav(DScreen.active);
   }
 
@@ -75,37 +75,54 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+
     return Column(
       children: [
-        // Top bar
+        // ── Top bar ───────────────────────────────────────
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          color: kSurface,
+          padding: EdgeInsets.fromLTRB(
+            14,
+            MediaQuery.of(context).padding.top + 10,
+            14,
+            10,
+          ),
+          decoration: BoxDecoration(
+            color: kSurface,
+            border: Border(bottom: BorderSide(color: kBorder)),
+            boxShadow: shadowXs,
+          ),
           child: Row(
             children: [
+              // Avatar
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [kCyan, kMint]),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: kCyan.withOpacity(0.3), blurRadius: 8),
+                  ],
+                ),
+                child: const Icon(Icons.person, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       state.currentProfile?.fullName ?? 'Driver',
-                      style: const TextStyle(
-                        fontFamily: kFontHead,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: headStyle(size: 15, weight: FontWeight.w900),
                     ),
-                    const Text(
-                      '--',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: kMuted,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Text(
+                      'WashGo Driver',
+                      style: bodyStyle(size: 11, color: kMuted),
                     ),
                   ],
                 ),
               ),
+              // Online toggle
               GestureDetector(
                 onTap: () async {
                   state.setDriverOnline(!state.driverOnline);
@@ -115,32 +132,36 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                       state.driverOnline,
                     );
                   }
-                  showToast(
-                    state.driverOnline
-                        ? '🟢 You are now online'
-                        : '🔴 You went offline',
-                  );
+                  if (mounted) {
+                    showToast(
+                      context,
+                      state.driverOnline
+                          ? '🟢 You are now online'
+                          : '🔴 You went offline',
+                    );
+                  }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
-                    vertical: 6,
+                    vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: state.driverOnline ? kMint.withOpacity(.12) : kBg,
+                    color: state.driverOnline ? kMint.withOpacity(0.1) : kBg,
                     border: Border.all(
                       color: state.driverOnline
-                          ? kMint.withOpacity(.35)
+                          ? kMint.withOpacity(0.4)
                           : kBorder,
+                      width: 1.5,
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 6,
-                        height: 6,
+                        width: 7,
+                        height: 7,
                         decoration: BoxDecoration(
                           color: state.driverOnline ? kMint2 : kMuted,
                           shape: BoxShape.circle,
@@ -149,10 +170,9 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                       const SizedBox(width: 6),
                       Text(
                         state.driverOnline ? 'Online' : 'Offline',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                        style: headStyle(
+                          size: 12,
+                          weight: FontWeight.w800,
                           color: state.driverOnline ? kMint2 : kMuted,
                         ),
                       ),
@@ -161,12 +181,13 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                 ),
               ),
               const SizedBox(width: 8),
+              // Switch to customer
               GestureDetector(
                 onTap: () => context.go('/home'),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 10,
+                    vertical: 7,
                   ),
                   decoration: BoxDecoration(
                     color: kBg,
@@ -174,15 +195,15 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
-                    children: const [
-                      Icon(Icons.home, size: 12),
-                      SizedBox(width: 4),
+                    children: [
+                      const Icon(Icons.swap_horiz, size: 14, color: kMuted),
+                      const SizedBox(width: 4),
                       Text(
                         'Customer',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                        style: headStyle(
+                          size: 11,
+                          weight: FontWeight.w700,
+                          color: kMuted,
                         ),
                       ),
                     ],
@@ -192,57 +213,63 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
             ],
           ),
         ),
-        // Map + overlay
+
+        // ── Map + overlay ─────────────────────────────────
         Expanded(
           child: Stack(
             children: [
               WashGoMap(
-                center: LatLng(kDefaultLat + .005, kDefaultLng),
+                center: LatLng(kDefaultLat + 0.005, kDefaultLng),
                 zoom: 14,
                 markers: [
-                  carMarker(LatLng(kDefaultLat + .004, kDefaultLng + .003)),
+                  carMarker(LatLng(kDefaultLat + 0.004, kDefaultLng + 0.003)),
                   Marker(
-                    point: LatLng(kDefaultLat + .008, kDefaultLng - .005),
-                    width: 26,
-                    height: 26,
+                    point: LatLng(kDefaultLat + 0.008, kDefaultLng - 0.005),
+                    width: 32,
+                    height: 32,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: kCyan3.withOpacity(.9),
+                        color: kCyan,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: Colors.white, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: kCyan.withOpacity(0.4),
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.directions_car,
-                          size: 13,
-                          color: Colors.white,
-                        ),
+                      child: const Icon(
+                        Icons.directions_car,
+                        size: 14,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ],
               ),
-              // Bottom overlay
+
+              // Bottom gradient overlay
               Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
                 child: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
-                      colors: [Color(0xFFF4F5F6), Colors.transparent],
-                      stops: [0.6, 1.0],
+                      colors: [kBg, kBg.withOpacity(0.95), Colors.transparent],
+                      stops: const [0.0, 0.6, 1.0],
                     ),
                   ),
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                  padding: const EdgeInsets.fromLTRB(14, 20, 14, 16),
                   child: Column(
                     children: [
                       // Stats
                       Row(
                         children: [
-                          StatTile(value: '\$0', label: 'Today'),
+                          StatTile(value: '€0', label: 'Today'),
                           const SizedBox(width: 8),
                           StatTile(value: '0', label: 'Trips'),
                           const SizedBox(width: 8),
@@ -253,55 +280,54 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton(
+                            child: OutlinedButton.icon(
                               onPressed: () => widget.onNav(DScreen.earnings),
+                              icon: const Icon(Icons.bar_chart, size: 16),
+                              label: Text(
+                                'Earnings',
+                                style: headStyle(
+                                  size: 12,
+                                  weight: FontWeight.w700,
+                                ),
+                              ),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: kBorder),
                                 foregroundColor: kText,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Icon(Icons.attach_money, size: 16),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Earnings',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(rSm),
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: OutlinedButton(
+                            child: ElevatedButton.icon(
                               onPressed: _showIncoming,
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: kBorder),
-                                foregroundColor: kText,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                              icon: const Icon(
+                                Icons.notifications_active,
+                                size: 16,
+                              ),
+                              label: Text(
+                                'Simulate Job',
+                                style: headStyle(
+                                  size: 12,
+                                  weight: FontWeight.w700,
+                                  color: Colors.white,
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Icon(Icons.notifications, size: 16),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Simulate Job',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kCyan,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(rSm),
+                                ),
                               ),
                             ),
                           ),
@@ -311,70 +337,107 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                   ),
                 ),
               ),
-              // Incoming req card
+
+              // ── Incoming request card ─────────────────
               if (_showReq)
                 Positioned(
-                  bottom: 50,
-                  left: 10,
-                  right: 10,
+                  bottom: 100,
+                  left: 12,
+                  right: 12,
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: kSurface,
                       border: Border.all(color: kBorder, width: 1.5),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(.12),
-                          blurRadius: 40,
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(rXl),
+                      boxShadow: shadowLg,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Badge
                         Row(
-                          children: const [
-                            Icon(Icons.directions_car, size: 10, color: kCyan3),
-                            SizedBox(width: 4),
-                            Text(
-                              'CAR PICKUP',
-                              style: TextStyle(
-                                fontFamily: kFontHead,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                color: kCyan3,
-                                letterSpacing: 1,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: kCyan.withOpacity(0.1),
+                                border: Border.all(
+                                  color: kCyan.withOpacity(0.3),
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.directions_car,
+                                    size: 11,
+                                    color: kCyan,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'CAR PICKUP',
+                                    style: headStyle(
+                                      size: 9,
+                                      weight: FontWeight.w800,
+                                      color: kCyan,
+                                    )..copyWith(letterSpacing: 0.8),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          _reqCust,
-                          style: const TextStyle(
-                            fontFamily: kFontHead,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Row(
-                          children: const [
-                            Icon(Icons.location_on, size: 12, color: kMuted),
-                            SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                'Via Roma 15 → Car Wash Hub',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: kMuted,
-                                  fontWeight: FontWeight.w600,
+                            const Spacer(),
+                            // Countdown
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: kOrange.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: kOrange.withOpacity(0.4),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$_countdown',
+                                  style: headStyle(
+                                    size: 16,
+                                    weight: FontWeight.w900,
+                                    color: kOrange,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
+                        Text(
+                          _reqCust,
+                          style: headStyle(size: 18, weight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              size: 13,
+                              color: kMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Via Roma 15 → Car Wash Hub',
+                                style: bodyStyle(size: 12, color: kMuted),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Expanded(
@@ -383,82 +446,80 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                 children: [
                                   Text(
                                     _reqPrice,
-                                    style: const TextStyle(
-                                      fontFamily: kFontHead,
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w900,
-                                      color: kCyan3,
+                                    style: headStyle(
+                                      size: 28,
+                                      weight: FontWeight.w900,
+                                      color: kCyan,
                                     ),
                                   ),
                                   Text(
                                     _reqDist,
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: kMuted,
-                                    ),
+                                    style: bodyStyle(size: 11, color: kMuted),
                                   ),
                                 ],
                               ),
                             ),
-                            Text(
-                              '$_countdown',
-                              style: const TextStyle(
-                                fontFamily: kFontHead,
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                                color: kOrange,
-                              ),
-                            ),
                           ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 14),
                         Row(
                           children: [
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: _declineReq,
                                 style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: kRed),
+                                  side: BorderSide(
+                                    color: kRed.withOpacity(0.5),
+                                  ),
                                   foregroundColor: kRed,
+                                  backgroundColor: kRed.withOpacity(0.05),
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
+                                    vertical: 13,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(rSm),
                                   ),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Decline',
-                                  style: TextStyle(
-                                    fontFamily: kFontHead,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
+                                  style: headStyle(
+                                    size: 13,
+                                    weight: FontWeight.w800,
+                                    color: kRed,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 10),
                             Expanded(
                               flex: 2,
                               child: ElevatedButton(
                                 onPressed: _acceptReq,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: kCyan3,
+                                  backgroundColor: kCyan,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
+                                    vertical: 13,
                                   ),
+                                  elevation: 0,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(rSm),
                                   ),
                                 ),
-                                child: const Text(
-                                  'Accept ✓',
-                                  style: TextStyle(
-                                    fontFamily: kFontHead,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.check_circle, size: 16),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Accept',
+                                      style: headStyle(
+                                        size: 13,
+                                        weight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

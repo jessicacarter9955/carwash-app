@@ -34,7 +34,8 @@ class WashGoMap extends StatelessWidget {
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate:
+              'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
           userAgentPackageName: 'com.washgo.app',
         ),
         if (polylines.isNotEmpty) PolylineLayer(polylines: polylines),
@@ -44,36 +45,36 @@ class WashGoMap extends StatelessWidget {
   }
 }
 
-// ── Helper marker builders ─────────────────────────────
+// ── Marker builders ───────────────────────────────────────────
 Marker userMarker(LatLng pos) => Marker(
   point: pos,
-  width: 26,
-  height: 26,
-  child: _CircleMarker(bg: kMint, icon: Icons.person, size: 12),
+  width: 32,
+  height: 32,
+  child: _CircleMarker(bg: kMint, icon: Icons.person, size: 14),
 );
 
 Marker carMarker(LatLng pos, [double rotation = 0]) => Marker(
   point: pos,
-  width: 34,
-  height: 34,
-  child: RotatedBox(
-    quarterTurns: (rotation / 90).round(),
-    child: _CircleMarker(bg: kCyan3, icon: Icons.directions_car, size: 16),
+  width: 38,
+  height: 38,
+  child: Transform.rotate(
+    angle: rotation * 3.14159 / 180,
+    child: _CircleMarker(bg: kCyan, icon: Icons.directions_car, size: 18),
   ),
 );
 
 Marker destMarker(LatLng pos) => Marker(
   point: pos,
-  width: 26,
-  height: 26,
-  child: _CircleMarker(bg: kRed, icon: Icons.location_on, size: 12),
+  width: 32,
+  height: 32,
+  child: _CircleMarker(bg: kRed, icon: Icons.location_on, size: 14),
 );
 
 Marker hubMarker(LatLng pos) => Marker(
   point: pos,
-  width: 28,
-  height: 28,
-  child: _CircleMarker(bg: kOrange, icon: Icons.local_shipping, size: 14),
+  width: 36,
+  height: 36,
+  child: _CircleMarker(bg: kOrange, icon: Icons.local_car_wash, size: 16),
 );
 
 class _CircleMarker extends StatelessWidget {
@@ -93,11 +94,11 @@ class _CircleMarker extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: Colors.white, width: 2.5),
         boxShadow: [
           BoxShadow(
-            color: bg.withOpacity(.4),
-            blurRadius: 8,
+            color: bg.withOpacity(0.4),
+            blurRadius: 10,
             offset: const Offset(0, 3),
           ),
         ],

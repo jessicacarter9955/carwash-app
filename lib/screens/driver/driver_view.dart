@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart' as provider;
-import '../../core/constants.dart';
 import '../../state/app_state.dart';
 import 'driver_home_screen.dart';
 import 'driver_active_screen.dart';
@@ -20,21 +18,21 @@ class DriverView extends ConsumerStatefulWidget {
 
 class _DriverViewState extends ConsumerState<DriverView> {
   DScreen _current = DScreen.home;
+
   void goScreen(DScreen s) => setState(() => _current = s);
 
   @override
   Widget build(BuildContext context) {
     return provider.ChangeNotifierProvider(
       create: (_) => AppState(),
-      child: WillPopScope(
-        onWillPop: () async {
-          if (_current != DScreen.home) {
+      child: PopScope(
+        canPop: _current == DScreen.home,
+        onPopInvoked: (didPop) {
+          if (!didPop && _current != DScreen.home) {
             goScreen(DScreen.home);
-            return false;
           }
-          return true;
         },
-        child: SafeArea(child: _buildScreen()),
+        child: Scaffold(body: _buildScreen()),
       ),
     );
   }

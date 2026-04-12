@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../state/app_state.dart';
-import '../../widgets/shared.dart';
 
 class DriverEarningsScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -21,174 +20,219 @@ class DriverEarningsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final weekly =
-        _trips.fold<double>(0, (s, t) => s + (t['earn'] as double)) * 2.8;
+    final weekly = _trips.fold<double>(
+        0, (s, t) => s + (t['earn'] as double)) *
+        2.8;
+
     return Column(
       children: [
-        AppHeader(title: 'Earnings', onBack: onBack),
+        // ── Top bar ───────────────────────────────────────
+        Container(
+          padding: EdgeInsets.fromLTRB(
+              14, MediaQuery.of(context).padding.top + 10, 14, 10),
+          decoration: BoxDecoration(
+            color: kSurface,
+            border: Border(bottom: BorderSide(color: kBorder)),
+            boxShadow: shadowXs,
+          ),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: onBack,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: kBg,
+                    border: Border.all(color: kBorder),
+                    borderRadius: BorderRadius.circular(rSm),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new,
+                      size: 14, color: kText),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text('Earnings',
+                  style:
+                      headStyle(size: 16, weight: FontWeight.w900)),
+            ],
+          ),
+        ),
+
+        // ── Body ──────────────────────────────────────────
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 30),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 30),
             children: [
-              // Hero
+              // Hero card
               Container(
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.all(22),
+                margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [kCyan3.withOpacity(.12), kMint.withOpacity(.08)],
+                  gradient: const LinearGradient(
+                    colors: [kCyan3, kCyan],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  border: Border.all(color: kCyan3.withOpacity(.25)),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(rXl),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kCyan.withOpacity(0.35),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      'TOTAL THIS WEEK',
-                      style: TextStyle(
-                        fontFamily: kFontHead,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: kMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
+                    Text('TOTAL THIS WEEK',
+                        style: headStyle(
+                            size: 11,
+                            weight: FontWeight.w800,
+                            color: Colors.white.withOpacity(0.7))
+                          ..copyWith(letterSpacing: 0.8)),
+                    const SizedBox(height: 8),
                     Text(
                       state.fmt(weekly),
-                      style: const TextStyle(
-                        fontFamily: kFontHead,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: kCyan3,
-                      ),
+                      style: headStyle(
+                          size: 38,
+                          weight: FontWeight.w900,
+                          color: Colors.white),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      '↑ 23% vs last week',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: kMuted,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.trending_up,
+                              size: 13, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text('↑ 23% vs last week',
+                              style: headStyle(
+                                  size: 11,
+                                  weight: FontWeight.w700,
+                                  color: Colors.white)),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              // Bar chart
+
+              // Quick stats
               Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: _bars
-                    .asMap()
-                    .entries
-                    .map(
-                      (e) => Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 3),
-                          child: Column(
-                            children: [
-                              Container(
-                                height: 70 * e.value / 100,
-                                decoration: BoxDecoration(
-                                  color: e.key % 2 == 0 ? kCyan3 : kMint,
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(4),
+                children: [
+                  _StatCard(
+                      label: 'Trips', value: '${_trips.length * 7}'),
+                  const SizedBox(width: 8),
+                  _StatCard(
+                      label: 'Avg/Trip',
+                      value: state.fmt(weekly / (_trips.length * 7))),
+                  const SizedBox(width: 8),
+                  _StatCard(label: 'Rating', value: '4.9★'),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Bar chart
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: kSurface,
+                  border: Border.all(color: kBorder),
+                  borderRadius: BorderRadius.circular(rMd),
+                  boxShadow: shadowXs,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('This Week',
+                        style: headStyle(
+                            size: 13, weight: FontWeight.w800)),
+                    const SizedBox(height: 14),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: _bars.asMap().entries.map((e) {
+                        final isToday = e.key == 4; // Friday
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 3),
+                            child: Column(
+                              children: [
+                                Container(
+                                  height: 70 * e.value / 100,
+                                  decoration: BoxDecoration(
+                                    color: isToday
+                                        ? kCyan
+                                        : kCyan.withOpacity(0.3),
+                                    borderRadius:
+                                        const BorderRadius.vertical(
+                                      top: Radius.circular(4),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
-                    )
-                    .toList(),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: _days
+                          .map((d) => Expanded(
+                                child: Text(d,
+                                    textAlign: TextAlign.center,
+                                    style: headStyle(
+                                        size: 9,
+                                        weight: FontWeight.w700,
+                                        color: kMuted)),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: _days
-                    .map(
-                      (d) => Expanded(
-                        child: Text(
-                          d,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: kMuted,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SecLabel('Recent Trips'),
+
+              const SizedBox(height: 16),
+
+              // Recent trips
+              Text('RECENT TRIPS',
+                  style: headStyle(
+                          size: 10,
+                          weight: FontWeight.w800,
+                          color: kMuted)
+                      .copyWith(letterSpacing: 1.2)),
+              const SizedBox(height: 10),
+
               Container(
                 decoration: BoxDecoration(
                   color: kSurface,
                   border: Border.all(color: kBorder),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(rMd),
+                  boxShadow: shadowXs,
                 ),
                 child: Column(
-                  children: _trips
-                      .asMap()
-                      .entries
-                      .map(
-                        (e) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            border: e.key < _trips.length - 1
-                                ? const Border(
-                                    bottom: BorderSide(color: kBorder),
-                                  )
-                                : null,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      e.value['route'] as String,
-                                      style: const TextStyle(
-                                        fontFamily: kFontHead,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    Text(
-                                      e.value['time'] as String,
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: kMuted,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                state.fmt(e.value['earn'] as double),
-                                style: const TextStyle(
-                                  fontFamily: kFontHead,
-                                  fontWeight: FontWeight.w800,
-                                  color: kCyan3,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
+                  children: _trips.asMap().entries.map((e) {
+                    final isLast = e.key == _trips.length - 1;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        border: !isLast
+                            ? const Border(
+                                bottom:
+                                    BorderSide(color: kBorder))
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                

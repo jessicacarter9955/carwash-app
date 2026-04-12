@@ -6,8 +6,7 @@ import '../../core/constants.dart';
 import '../../services/order_service.dart';
 import '../../state/app_state.dart';
 import '../../widgets/map_widget.dart';
-import '../../widgets/toast_overlay.dart';
-import '../../widgets/shared.dart';
+import '../../widgets/app_toast.dart';
 
 class DriverActiveScreen extends StatelessWidget {
   final VoidCallback onBack, onDelivery;
@@ -20,47 +19,68 @@ class DriverActiveScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+
     return Column(
       children: [
-        // Topbar
+        // ── Top bar ───────────────────────────────────────
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: const BoxDecoration(
+          padding: EdgeInsets.fromLTRB(
+            14,
+            MediaQuery.of(context).padding.top + 10,
+            14,
+            10,
+          ),
+          decoration: BoxDecoration(
             color: kSurface,
             border: Border(bottom: BorderSide(color: kBorder)),
+            boxShadow: shadowXs,
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Active Job',
-                style: TextStyle(
-                  fontFamily: kFontHead,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
+              GestureDetector(
+                onTap: onBack,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: kBg,
+                    border: Border.all(color: kBorder),
+                    borderRadius: BorderRadius.circular(rSm),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 14,
+                    color: kText,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Active Job',
+                  style: headStyle(size: 16, weight: FontWeight.w900),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
+                  horizontal: 12,
+                  vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: kCyan3.withOpacity(.12),
-                  border: Border.all(color: kCyan3.withOpacity(.3)),
-                  borderRadius: BorderRadius.circular(10),
+                  color: kCyan.withOpacity(0.1),
+                  border: Border.all(color: kCyan.withOpacity(0.3)),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
-                  children: const [
-                    Icon(Icons.directions_car, size: 11, color: kCyan3),
-                    SizedBox(width: 4),
+                  children: [
+                    const Icon(Icons.directions_car, size: 12, color: kCyan),
+                    const SizedBox(width: 5),
                     Text(
                       'Car Pickup',
-                      style: TextStyle(
-                        fontFamily: kFontHead,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: kCyan3,
+                      style: headStyle(
+                        size: 11,
+                        weight: FontWeight.w800,
+                        color: kCyan,
                       ),
                     ),
                   ],
@@ -69,87 +89,96 @@ class DriverActiveScreen extends StatelessWidget {
             ],
           ),
         ),
-        // Map
+
+        // ── Map ───────────────────────────────────────────
         SizedBox(
           height: 220,
           child: WashGoMap(
-            center: LatLng(kRomeLat + .004, kRomeLng + .003),
+            center: LatLng(kRomeLat + 0.004, kRomeLng + 0.003),
             interactive: false,
             markers: [
-              carMarker(LatLng(kRomeLat + .004, kRomeLng + .003)),
+              carMarker(LatLng(kRomeLat + 0.004, kRomeLng + 0.003)),
               userMarker(LatLng(state.userLat, state.userLng)),
+              hubMarker(LatLng(kHubLat, kHubLng)),
             ],
             polylines: [
               Polyline(
                 points: [
-                  LatLng(kRomeLat + .004, kRomeLng + .003),
+                  LatLng(kRomeLat + 0.004, kRomeLng + 0.003),
                   LatLng(state.userLat, state.userLng),
                 ],
-                color: kCyan3,
+                color: kCyan,
                 strokeWidth: 4,
               ),
             ],
           ),
         ),
+
+        // ── Body ──────────────────────────────────────────
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 100),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
             children: [
               // Customer card
-              AppCard(
+              _Card(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'CUSTOMER',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: kMuted,
-                          letterSpacing: .5,
-                        ),
-                      ),
+                    Text(
+                      'CUSTOMER',
+                      style: headStyle(
+                        size: 10,
+                        weight: FontWeight.w800,
+                        color: kMuted,
+                      ).copyWith(letterSpacing: 0.6),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Container(
-                          width: 36,
-                          height: 36,
-                          decoration: const BoxDecoration(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [kCyan, kMint],
+                            ),
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(colors: [kCyan3, kMint]),
+                            boxShadow: [
+                              BoxShadow(
+                                color: kCyan.withOpacity(0.3),
+                                blurRadius: 8,
+                              ),
+                            ],
                           ),
-                          child: const Center(
-                            child: Icon(Icons.person, size: 18),
+                          child: const Icon(
+                            Icons.person,
+                            size: 20,
+                            color: Colors.white,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        const Expanded(
+                        const SizedBox(width: 12),
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Demo Customer',
-                                style: TextStyle(
-                                  fontFamily: kFontHead,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
+                                style: headStyle(
+                                  size: 14,
+                                  weight: FontWeight.w800,
                                 ),
                               ),
                               Row(
-                                children: const [
-                                  Icon(Icons.phone, size: 10, color: kMuted),
-                                  SizedBox(width: 4),
+                                children: [
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 12,
+                                    color: kYellow,
+                                  ),
+                                  const SizedBox(width: 3),
                                   Text(
-                                    'Tap to call',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: kMuted,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    '4.8 · Tap to call',
+                                    style: bodyStyle(size: 11, color: kMuted),
                                   ),
                                 ],
                               ),
@@ -157,241 +186,170 @@ class DriverActiveScreen extends StatelessWidget {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => showToast('Calling customer...'),
+                          onTap: () =>
+                              showToast(context, 'Calling customer...'),
                           child: Container(
-                            width: 34,
-                            height: 34,
+                            width: 38,
+                            height: 38,
                             decoration: BoxDecoration(
-                              color: kBg,
-                              border: Border.all(color: kBorder),
+                              color: kCyan.withOpacity(0.1),
+                              border: Border.all(color: kCyan.withOpacity(0.3)),
                               shape: BoxShape.circle,
                             ),
-                            child: const Center(
-                              child: Icon(Icons.phone, size: 15),
+                            child: const Icon(
+                              Icons.phone,
+                              size: 16,
+                              color: kCyan,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const Divider(height: 20, color: kBorder),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'PICKUP',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: kMuted,
-                        ),
-                      ),
+                    const SizedBox(height: 14),
+                    const Divider(height: 1, color: kBorder),
+                    const SizedBox(height: 12),
+                    // Pickup
+                    _LocationRow(
+                      icon: Icons.location_on,
+                      color: kCyan,
+                      label: 'PICKUP',
+                      value: 'Via Roma 15, Rome',
                     ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: const [
-                        Icon(Icons.location_on, size: 13),
-                        SizedBox(width: 4),
-                        Text(
-                          'Via Roma 15, Rome',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'DROP-OFF',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: kMuted,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: const [
-                        Icon(Icons.local_shipping, size: 13),
-                        SizedBox(width: 4),
-                        Text(
-                          'Car Wash Hub',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 10),
+                    // Drop-off
+                    _LocationRow(
+                      icon: Icons.local_car_wash,
+                      color: kOrange,
+                      label: 'DROP-OFF',
+                      value: 'Car Wash Hub',
                     ),
                   ],
                 ),
               ),
-              // Status update
-              AppCard(
+
+              const SizedBox(height: 4),
+
+              // Status update card
+              _Card(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'STATUS UPDATE',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: kMuted,
-                        ),
-                      ),
+                    Text(
+                      'STATUS UPDATE',
+                      style: headStyle(
+                        size: 10,
+                        weight: FontWeight.w800,
+                        color: kMuted,
+                      ).copyWith(letterSpacing: 0.6),
+                    ),
+                    const SizedBox(height: 12),
+                    _StatusBtn(
+                      label: 'Arrived at Pickup',
+                      icon: Icons.location_on,
+                      color: kCyan,
+                      onTap: () async {
+                        showToast(context, '📍 Status: pickup');
+                        final o = state.currentOrder;
+                        if (o != null) {
+                          await OrderService.updateStatus(o.id, 'pickup');
+                        }
+                      },
                     ),
                     const SizedBox(height: 8),
                     _StatusBtn(
-                      label: 'Arrived at Pickup',
-                      icon: Icons.check_circle,
-                      color: kCyan3,
-                      onTap: () async {
-                        showToast('Status: pickup');
-                        final o = state.currentOrder;
-                        if (o != null)
-                          await OrderService.updateStatus(o.id, 'pickup');
-                      },
-                    ),
-                    const SizedBox(height: 6),
-                    _StatusBtn(
                       label: 'Car Collected',
                       icon: Icons.directions_car,
-                      color: kMint2,
+                      color: kMint,
                       onTap: () async {
-                        showToast('Status: washing');
+                        showToast(context, '🚗 Status: washing');
                         final o = state.currentOrder;
-                        if (o != null)
+                        if (o != null) {
                           await OrderService.updateStatus(o.id, 'washing');
+                        }
                       },
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     _StatusBtn(
                       label: 'Wash Complete',
                       icon: Icons.auto_awesome,
                       color: kOrange,
-                      onTap: () {
-                        showToast('Status: ready');
-                      },
+                      onTap: () => showToast(context, '✨ Status: ready'),
                     ),
-                    const SizedBox(height: 6),
-                    ElevatedButton(
-                      onPressed: () async {
-                        showToast('Delivered!');
-                        final o = state.currentOrder;
-                        if (o != null)
-                          await OrderService.updateStatus(o.id, 'delivered');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kCyan3,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(44),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.check_circle, size: 18),
-                          SizedBox(width: 6),
-                          Text(
-                            'Mark Delivered',
-                            style: TextStyle(
-                              fontFamily: kFontHead,
-                              fontWeight: FontWeight.w800,
-                            ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          showToast(context, '✅ Delivered!');
+                          final o = state.currentOrder;
+                          if (o != null) {
+                            await OrderService.updateStatus(o.id, 'delivered');
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kCyan,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(rMd),
                           ),
-                        ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_circle, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Mark Delivered',
+                              style: headStyle(
+                                size: 14,
+                                weight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              // Earnings
-              AppCard(
+
+              const SizedBox(height: 4),
+
+              // Earnings card
+              _Card(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'YOUR EARNINGS',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: kMuted,
-                        ),
-                      ),
+                    Text(
+                      'YOUR EARNINGS',
+                      style: headStyle(
+                        size: 10,
+                        weight: FontWeight.w800,
+                        color: kMuted,
+                      ).copyWith(letterSpacing: 0.6),
+                    ),
+                    const SizedBox(height: 12),
+                    _EarningsRow(
+                      label: 'Car Wash Pickup',
+                      value: '€12.50',
+                      bold: false,
+                    ),
+                    const SizedBox(height: 4),
+                    _EarningsRow(
+                      label: 'WashGo fee (15%)',
+                      value: '-€1.88',
+                      muted: true,
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Car Wash Pickup',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const Text(
-                          '\$12.50',
-                          style: TextStyle(
-                            fontFamily: kFontHead,
-                            fontWeight: FontWeight.w800,
-                            color: kCyan3,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'WashGo fee (15%)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: kMuted,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const Text(
-                          '-\$1.88',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: kMuted,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(color: kBorder),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Net',
-                          style: TextStyle(
-                            fontFamily: kFontHead,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Text(
-                          '\$10.62',
-                          style: TextStyle(
-                            fontFamily: kFontHead,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: kCyan3,
-                          ),
-                        ),
-                      ],
+                    const Divider(height: 1, color: kBorder),
+                    const SizedBox(height: 8),
+                    _EarningsRow(
+                      label: 'Net earnings',
+                      value: '€10.62',
+                      bold: true,
                     ),
                   ],
                 ),
@@ -399,7 +357,20 @@ class DriverActiveScreen extends StatelessWidget {
             ],
           ),
         ),
-        BottomBar(
+
+        // ── Bottom bar ────────────────────────────────────
+        Container(
+          padding: EdgeInsets.fromLTRB(
+            14,
+            12,
+            14,
+            MediaQuery.of(context).padding.bottom + 12,
+          ),
+          decoration: BoxDecoration(
+            color: kSurface,
+            border: Border(top: BorderSide(color: kBorder)),
+            boxShadow: shadowMd,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -410,36 +381,112 @@ class DriverActiveScreen extends StatelessWidget {
                     foregroundColor: kText,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(rMd),
                     ),
                   ),
-                  child: const Text('← Back'),
+                  child: Text(
+                    'Back',
+                    style: headStyle(size: 13, weight: FontWeight.w700),
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
                   onPressed: onDelivery,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kCyan3,
+                    backgroundColor: kCyan,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(rMd),
                     ),
                   ),
-                  child: const Text(
-                    'Arrived at Pickup ✓',
-                    style: TextStyle(
-                      fontFamily: kFontHead,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.check_circle, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Arrived at Pickup',
+                        style: headStyle(
+                          size: 13,
+                          weight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Sub-widgets ───────────────────────────────────────────────
+class _Card extends StatelessWidget {
+  final Widget child;
+  const _Card({required this.child});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    margin: const EdgeInsets.only(bottom: 10),
+    decoration: BoxDecoration(
+      color: kSurface,
+      border: Border.all(color: kBorder),
+      borderRadius: BorderRadius.circular(rMd),
+      boxShadow: shadowXs,
+    ),
+    child: child,
+  );
+}
+
+class _LocationRow extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+  const _LocationRow({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(rSm),
+          ),
+          child: Icon(icon, size: 14, color: color),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: headStyle(
+                size: 9,
+                weight: FontWeight.w800,
+                color: kMuted,
+              ).copyWith(letterSpacing: 0.5),
+            ),
+            Text(value, style: bodyStyle(size: 13, weight: FontWeight.w600)),
+          ],
         ),
       ],
     );
@@ -466,28 +513,67 @@ class _StatusBtn extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: color,
-          side: BorderSide(color: color.withOpacity(.3)),
-          backgroundColor: color.withOpacity(.1),
-          padding: const EdgeInsets.symmetric(vertical: 11),
+          side: BorderSide(color: color.withOpacity(0.35)),
+          backgroundColor: color.withOpacity(0.07),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(rSm),
           ),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16),
+            Icon(icon, size: 16, color: color),
             const SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(
-                fontFamily: kFontHead,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
+              style: headStyle(size: 12, weight: FontWeight.w800, color: color),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EarningsRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool bold;
+  final bool muted;
+  const _EarningsRow({
+    required this.label,
+    required this.value,
+    this.bold = false,
+    this.muted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: bold
+              ? headStyle(size: 13, weight: FontWeight.w800)
+              : bodyStyle(
+                  size: 12,
+                  color: muted ? kMuted : kText,
+                  weight: FontWeight.w500,
+                ),
+        ),
+        Text(
+          value,
+          style: bold
+              ? headStyle(size: 16, weight: FontWeight.w900, color: kCyan)
+              : bodyStyle(
+                  size: 12,
+                  color: muted ? kMuted : kText,
+                  weight: FontWeight.w600,
+                ),
+        ),
+      ],
     );
   }
 }
