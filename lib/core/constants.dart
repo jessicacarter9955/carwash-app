@@ -19,10 +19,10 @@ const String kSupabaseServiceRoleKey = supabaseServiceRole;
 // Colors
 const kBg = Color(0xFFF4F5F6);
 const kSurface = Colors.white;
-const kCyan = Color(0xFF2563EB); // Changed to blue for car wash
+const kCyan = Color(0xFF2563EB);
 const kCyan2 = Color(0xFF1D4ED8);
 const kCyan3 = Color(0xFF1E40AF);
-const kMint = Color(0xFF3B82F6); // Changed to navy blue
+const kMint = Color(0xFF3B82F6);
 const kMint2 = Color(0xFF2563EB);
 const kRed = Color(0xFFFF4D6D);
 const kOrange = Color(0xFFFF8C42);
@@ -77,13 +77,13 @@ TextStyle bodyStyle({
 const String kFontHead = 'Nunito';
 const String kFontBody = 'DMSans';
 
-// Hub location (CarWash Pro facility)
+// Hub location
 const double kHubLat = 41.9024;
 const double kHubLng = 12.5143;
 const double kDefaultLat = 41.8988;
 const double kDefaultLng = 12.4768;
 
-// Rome location (pickup/delivery)
+// Rome location
 const double kRomeLat = 41.9024;
 const double kRomeLng = 12.5143;
 
@@ -91,8 +91,8 @@ const double kRomeLng = 12.5143;
 const String osrmBase = 'https://router.project-osrm.org/route/v1/driving';
 const String nominatimBase = 'https://nominatim.openstreetmap.org/reverse';
 
-// Mapbox token (use environment variable)
+// Mapbox token
 const String mapboxToken = String.fromEnvironment(
   'MAPBOX_TOKEN',
-  defaultValue: 'YOUR_MAPBOX_TOKEN',
+  defaultValue: '',
 );

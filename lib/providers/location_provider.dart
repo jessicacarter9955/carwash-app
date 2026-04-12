@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../core/constants.dart';
+import 'notification_provider.dart';
 
 class LocationState {
   final double lat;
@@ -16,14 +17,17 @@ class LocationState {
     this.loading = true,
   });
 
-  LocationState copyWith(
-          {double? lat, double? lng, String? address, bool? loading}) =>
-      LocationState(
-        lat: lat ?? this.lat,
-        lng: lng ?? this.lng,
-        address: address ?? this.address,
-        loading: loading ?? this.loading,
-      );
+  LocationState copyWith({
+    double? lat,
+    double? lng,
+    String? address,
+    bool? loading,
+  }) => LocationState(
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    address: address ?? this.address,
+    loading: loading ?? this.loading,
+  );
 }
 
 class LocationNotifier extends StateNotifier<LocationState> {
@@ -36,29 +40,45 @@ class LocationNotifier extends StateNotifier<LocationState> {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         state = state.copyWith(
-            loading: false, address: 'Location service disabled');
+          loading: false,
+          address: 'Location service disabled',
+        );
         return;
       }
+
       LocationPermission perm = await Geolocator.checkPermission();
       if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
         if (perm == LocationPermission.denied) {
           state = state.copyWith(
-              loading: false, address: 'Location permission denied');
+            loading: false,
+            address: 'Location permission denied',
+          );
           return;
         }
       }
       if (perm == LocationPermission.deniedForever) {
         state = state.copyWith(
-            loading: false, address: 'Location permission denied forever');
+          loading: false,
+          address: 'Location permission denied forever',
+        );
         return;
       }
+
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
       final addr = await _reverseGeo(pos.latitude, pos.longitude);
+
       state = state.copyWith(
-          lat: pos.latitude, lng: pos.longitude, address: addr, loading: false);
+        lat: pos.latitude,
+        lng: pos.longitude,
+        address: addr,
+        loading: false,
+      );
+
+      // Notify on location detected
+      await NotificationService.showLocal('📍 Location Detected', addr);
     } catch (e) {
       state = state.copyWith(loading: false, address: 'Location unavailable');
     }
@@ -69,9 +89,10 @@ class LocationNotifier extends StateNotifier<LocationState> {
       final placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
-        return '${p.street ?? ''}, ${p.locality ?? ''}'
-            .trim()
-            .replaceAll(RegExp(r'^,\s*'), '');
+        return '${p.street ?? ''}, ${p.locality ?? ''}'.trim().replaceAll(
+          RegExp(r'^,\s*'),
+          '',
+        );
       }
     } catch (_) {}
     return '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
@@ -81,6 +102,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   void updateAddress(String address) {
     state = state.copyWith(address: address, loading: false);
+    // Notify on manual address update
+    NotificationService.showLocal('📍 Address Updated', address);
   }
 
   Future<void> geocodeAddress(String address) async {
@@ -96,18 +119,14 @@ class LocationNotifier extends StateNotifier<LocationState> {
           loading: false,
         );
       } else {
-        state = state.copyWith(
-          address: address,
-          loading: false,
-        );
+        state = state.copyWith(address: address, loading: false);
       }
     } catch (e) {
-      // If geocoding fails, just update the address
-      state = state.copyWith(
-        address: address,
-        loading: false,
-      );
+      state = state.copyWith(address: address, loading: false);
     }
+
+    // Notify on address change
+    await NotificationService.showLocal('📍 Address Changed', address);
   }
 }
 
