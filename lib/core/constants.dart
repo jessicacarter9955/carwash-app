@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // ── Supabase ──────────────────────────────────────────
 const String supabaseUrl = 'https://ofadiqbebzmrjyxzoxym.supabase.co';
@@ -15,6 +16,9 @@ const String supabaseServiceRole = String.fromEnvironment(
 const String kSupabaseUrl = supabaseUrl;
 const String kSupabaseAnonKey = supabaseAnon;
 const String kSupabaseServiceRoleKey = supabaseServiceRole;
+
+// Mapbox token - loaded from .env
+String get mapboxToken => dotenv.env['MAPBOX_TOKEN'] ?? '';
 
 // Colors
 const kBg = Color(0xFFF4F5F6);
@@ -92,9 +96,3 @@ const double kRomeLng = 12.5143;
 // API endpoints
 const String osrmBase = 'https://router.project-osrm.org/route/v1/driving';
 const String nominatimBase = 'https://nominatim.openstreetmap.org/reverse';
-
-// Mapbox token - set via --dart-define=MAPBOX_TOKEN=your_token_here
-const String mapboxToken = String.fromEnvironment(
-  'MAPBOX_TOKEN',
-  defaultValue: '',
-);

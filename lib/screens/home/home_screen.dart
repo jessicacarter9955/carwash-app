@@ -179,7 +179,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               TileLayer(
                 urlTemplate:
-                    'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+                    'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}',
+                additionalOptions: {
+                  'accessToken': mapboxToken,
+                },
                 userAgentPackageName: 'com.washgo.app',
               ),
               MarkerLayer(

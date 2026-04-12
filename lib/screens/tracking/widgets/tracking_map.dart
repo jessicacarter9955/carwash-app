@@ -53,7 +53,11 @@ class TrackingMap extends StatelessWidget {
       ),
       children: [
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate:
+              'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}',
+          additionalOptions: {
+            'accessToken': mapboxToken,
+          },
           userAgentPackageName: 'com.washgo.app',
         ),
         PolylineLayer(
@@ -72,8 +76,7 @@ class TrackingMap extends StatelessWidget {
     const R = 6371000; // Earth radius in meters
     final dLat = (lat2 - lat1) * (math.pi / 180);
     final dLon = (lon2 - lon1) * (math.pi / 180);
-    final a =
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(lat1 * (math.pi / 180)) *
             math.cos(lat2 * (math.pi / 180)) *
             math.sin(dLon / 2) *

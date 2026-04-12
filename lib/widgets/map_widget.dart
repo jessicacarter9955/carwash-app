@@ -35,7 +35,10 @@ class WashGoMap extends StatelessWidget {
       children: [
         TileLayer(
           urlTemplate:
-              'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+              'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}',
+          additionalOptions: {
+            'accessToken': mapboxToken,
+          },
           userAgentPackageName: 'com.washgo.app',
         ),
         if (polylines.isNotEmpty) PolylineLayer(polylines: polylines),
@@ -47,35 +50,35 @@ class WashGoMap extends StatelessWidget {
 
 // ── Marker builders ───────────────────────────────────────────
 Marker userMarker(LatLng pos) => Marker(
-  point: pos,
-  width: 32,
-  height: 32,
-  child: _CircleMarker(bg: kMint, icon: Icons.person, size: 14),
-);
+      point: pos,
+      width: 32,
+      height: 32,
+      child: _CircleMarker(bg: kMint, icon: Icons.person, size: 14),
+    );
 
 Marker carMarker(LatLng pos, [double rotation = 0]) => Marker(
-  point: pos,
-  width: 38,
-  height: 38,
-  child: Transform.rotate(
-    angle: rotation * 3.14159 / 180,
-    child: _CircleMarker(bg: kCyan, icon: Icons.directions_car, size: 18),
-  ),
-);
+      point: pos,
+      width: 38,
+      height: 38,
+      child: Transform.rotate(
+        angle: rotation * 3.14159 / 180,
+        child: _CircleMarker(bg: kCyan, icon: Icons.directions_car, size: 18),
+      ),
+    );
 
 Marker destMarker(LatLng pos) => Marker(
-  point: pos,
-  width: 32,
-  height: 32,
-  child: _CircleMarker(bg: kRed, icon: Icons.location_on, size: 14),
-);
+      point: pos,
+      width: 32,
+      height: 32,
+      child: _CircleMarker(bg: kRed, icon: Icons.location_on, size: 14),
+    );
 
 Marker hubMarker(LatLng pos) => Marker(
-  point: pos,
-  width: 36,
-  height: 36,
-  child: _CircleMarker(bg: kOrange, icon: Icons.local_car_wash, size: 16),
-);
+      point: pos,
+      width: 36,
+      height: 36,
+      child: _CircleMarker(bg: kOrange, icon: Icons.local_car_wash, size: 16),
+    );
 
 class _CircleMarker extends StatelessWidget {
   final Color bg;
