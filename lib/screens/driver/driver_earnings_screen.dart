@@ -20,16 +20,19 @@ class DriverEarningsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final weekly = _trips.fold<double>(
-        0, (s, t) => s + (t['earn'] as double)) *
-        2.8;
+    final weekly =
+        _trips.fold<double>(0, (s, t) => s + (t['earn'] as double)) * 2.8;
 
     return Column(
       children: [
         // ── Top bar ───────────────────────────────────────
         Container(
           padding: EdgeInsets.fromLTRB(
-              14, MediaQuery.of(context).padding.top + 10, 14, 10),
+            14,
+            MediaQuery.of(context).padding.top + 10,
+            14,
+            10,
+          ),
           decoration: BoxDecoration(
             color: kSurface,
             border: Border(bottom: BorderSide(color: kBorder)),
@@ -47,14 +50,18 @@ class DriverEarningsScreen extends StatelessWidget {
                     border: Border.all(color: kBorder),
                     borderRadius: BorderRadius.circular(rSm),
                   ),
-                  child: const Icon(Icons.arrow_back_ios_new,
-                      size: 14, color: kText),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 14,
+                    color: kText,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
-              Text('Earnings',
-                  style:
-                      headStyle(size: 16, weight: FontWeight.w900)),
+              Text(
+                'Earnings',
+                style: headStyle(size: 16, weight: FontWeight.w900),
+              ),
             ],
           ),
         ),
@@ -85,24 +92,29 @@ class DriverEarningsScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Text('TOTAL THIS WEEK',
-                        style: headStyle(
-                            size: 11,
-                            weight: FontWeight.w800,
-                            color: Colors.white.withOpacity(0.7))
-                          ..copyWith(letterSpacing: 0.8)),
+                    Text(
+                      'TOTAL THIS WEEK',
+                      style: headStyle(
+                        size: 11,
+                        weight: FontWeight.w800,
+                        color: Colors.white.withOpacity(0.7),
+                      )..copyWith(letterSpacing: 0.8),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       state.fmt(weekly),
                       style: headStyle(
-                          size: 38,
-                          weight: FontWeight.w900,
-                          color: Colors.white),
+                        size: 38,
+                        weight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
@@ -110,14 +122,20 @@ class DriverEarningsScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.trending_up,
-                              size: 13, color: Colors.white),
+                          const Icon(
+                            Icons.trending_up,
+                            size: 13,
+                            color: Colors.white,
+                          ),
                           const SizedBox(width: 4),
-                          Text('↑ 23% vs last week',
-                              style: headStyle(
-                                  size: 11,
-                                  weight: FontWeight.w700,
-                                  color: Colors.white)),
+                          Text(
+                            '↑ 23% vs last week',
+                            style: headStyle(
+                              size: 11,
+                              weight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -128,12 +146,12 @@ class DriverEarningsScreen extends StatelessWidget {
               // Quick stats
               Row(
                 children: [
-                  _StatCard(
-                      label: 'Trips', value: '${_trips.length * 7}'),
+                  _StatCard(label: 'Trips', value: '${_trips.length * 7}'),
                   const SizedBox(width: 8),
                   _StatCard(
-                      label: 'Avg/Trip',
-                      value: state.fmt(weekly / (_trips.length * 7))),
+                    label: 'Avg/Trip',
+                    value: state.fmt(weekly / (_trips.length * 7)),
+                  ),
                   const SizedBox(width: 8),
                   _StatCard(label: 'Rating', value: '4.9★'),
                 ],
@@ -152,9 +170,10 @@ class DriverEarningsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('This Week',
-                        style: headStyle(
-                            size: 13, weight: FontWeight.w800)),
+                    Text(
+                      'This Week',
+                      style: headStyle(size: 13, weight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 14),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -162,8 +181,7 @@ class DriverEarningsScreen extends StatelessWidget {
                         final isToday = e.key == 4; // Friday
                         return Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
                             child: Column(
                               children: [
                                 Container(
@@ -172,8 +190,7 @@ class DriverEarningsScreen extends StatelessWidget {
                                     color: isToday
                                         ? kCyan
                                         : kCyan.withOpacity(0.3),
-                                    borderRadius:
-                                        const BorderRadius.vertical(
+                                    borderRadius: const BorderRadius.vertical(
                                       top: Radius.circular(4),
                                     ),
                                   ),
@@ -187,14 +204,19 @@ class DriverEarningsScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Row(
                       children: _days
-                          .map((d) => Expanded(
-                                child: Text(d,
-                                    textAlign: TextAlign.center,
-                                    style: headStyle(
-                                        size: 9,
-                                        weight: FontWeight.w700,
-                                        color: kMuted)),
-                              ))
+                          .map(
+                            (d) => Expanded(
+                              child: Text(
+                                d,
+                                textAlign: TextAlign.center,
+                                style: headStyle(
+                                  size: 9,
+                                  weight: FontWeight.w700,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ),
+                          )
                           .toList(),
                     ),
                   ],
@@ -204,12 +226,14 @@ class DriverEarningsScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Recent trips
-              Text('RECENT TRIPS',
-                  style: headStyle(
-                          size: 10,
-                          weight: FontWeight.w800,
-                          color: kMuted)
-                      .copyWith(letterSpacing: 1.2)),
+              Text(
+                'RECENT TRIPS',
+                style: headStyle(
+                  size: 10,
+                  weight: FontWeight.w800,
+                  color: kMuted,
+                ).copyWith(letterSpacing: 1.2),
+              ),
               const SizedBox(height: 10),
 
               Container(
@@ -224,15 +248,92 @@ class DriverEarningsScreen extends StatelessWidget {
                     final isLast = e.key == _trips.length - 1;
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         border: !isLast
-                            ? const Border(
-                                bottom:
-                                    BorderSide(color: kBorder))
+                            ? const Border(bottom: BorderSide(color: kBorder))
                             : null,
                       ),
                       child: Row(
                         children: [
                           Container(
-                
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: kCyan,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  e.value['route'] as String,
+                                  style: headStyle(
+                                    size: 13,
+                                    weight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  e.value['time'] as String,
+                                  style: bodyStyle(size: 11, color: kMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '€${(e.value['earn'] as double).toStringAsFixed(2)}',
+                            style: headStyle(
+                              size: 14,
+                              weight: FontWeight.w900,
+                              color: kCyan,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  const _StatCard({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: kSurface,
+          border: Border.all(color: kBorder),
+          borderRadius: BorderRadius.circular(rSm),
+          boxShadow: shadowXs,
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: headStyle(size: 16, weight: FontWeight.w900, color: kCyan),
+            ),
+            const SizedBox(height: 2),
+            Text(label, style: bodyStyle(size: 10, color: kMuted)),
+          ],
+        ),
+      ),
+    );
+  }
+}
