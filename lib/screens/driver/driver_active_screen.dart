@@ -4,17 +4,54 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../services/order_service.dart';
+import '../../services/routing_service.dart';
 import '../../state/app_state.dart';
 import '../../widgets/map_widget.dart';
 import '../../widgets/app_toast.dart';
 
-class DriverActiveScreen extends StatelessWidget {
+class DriverActiveScreen extends StatefulWidget {
   final VoidCallback onBack, onDelivery;
   const DriverActiveScreen({
     super.key,
     required this.onBack,
     required this.onDelivery,
   });
+
+  @override
+  State<DriverActiveScreen> createState() => _DriverActiveScreenState();
+}
+
+class _DriverActiveScreenState extends State<DriverActiveScreen> {
+  List<LatLng> _routeCoords = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRoute();
+  }
+
+  Future<void> _fetchRoute() async {
+    final state = context.read<AppState>();
+    try {
+      final result = await RoutingService.fetchRoute(
+        kRomeLat + 0.004,
+        kRomeLng + 0.003,
+        state.userLat,
+        state.userLng,
+      );
+      if (mounted) {
+        setState(() => _routeCoords = result.coords);
+      }
+    } catch (e) {
+      // Fallback to straight line if routing fails
+      if (mounted) {
+        setState(() => _routeCoords = [
+              LatLng(kRomeLat + 0.004, kRomeLng + 0.003),
+              LatLng(state.userLat, state.userLng),
+            ]);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +75,7 @@ class DriverActiveScreen extends StatelessWidget {
           child: Row(
             children: [
               GestureDetector(
-                onTap: onBack,
+                onTap: widget.onBack,
                 child: Container(
                   width: 36,
                   height: 36,
@@ -102,14 +139,12 @@ class DriverActiveScreen extends StatelessWidget {
               hubMarker(LatLng(kHubLat, kHubLng)),
             ],
             polylines: [
-              Polyline(
-                points: [
-                  LatLng(kRomeLat + 0.004, kRomeLng + 0.003),
-                  LatLng(state.userLat, state.userLng),
-                ],
-                color: kCyan,
-                strokeWidth: 4,
-              ),
+              if (_routeCoords.length > 1)
+                Polyline(
+                  points: _routeCoords,
+                  color: kCyan,
+                  strokeWidth: 4,
+                ),
             ],
           ),
         ),
@@ -375,7 +410,7 @@ class DriverActiveScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: onBack,
+                  onPressed: widget.onBack,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: kBorder),
                     foregroundColor: kText,
@@ -394,7 +429,7 @@ class DriverActiveScreen extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
-                  onPressed: onDelivery,
+                  onPressed: widget.onDelivery,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kCyan,
                     foregroundColor: Colors.white,
@@ -436,17 +471,17 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    margin: const EdgeInsets.only(bottom: 10),
-    decoration: BoxDecoration(
-      color: kSurface,
-      border: Border.all(color: kBorder),
-      borderRadius: BorderRadius.circular(rMd),
-      boxShadow: shadowXs,
-    ),
-    child: child,
-  );
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: kSurface,
+          border: Border.all(color: kBorder),
+          borderRadius: BorderRadius.circular(rMd),
+          boxShadow: shadowXs,
+        ),
+        child: child,
+      );
 }
 
 class _LocationRow extends StatelessWidget {
