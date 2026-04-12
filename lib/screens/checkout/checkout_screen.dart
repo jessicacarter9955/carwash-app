@@ -129,10 +129,10 @@ class CheckoutScreen extends ConsumerWidget {
                 _SectionLabel('Payment'),
                 ...paymentMethods.map(
                   (pm) => _PaymentRow(
-                    icon: pm['icon']!,
-                    label: pm['label']!,
-                    selected: cart.selectedPaymentMethod == pm['key'],
-                    onTap: () => notifier.selectPayment(pm['key']!),
+                    icon: pm['icon'] as IconData,
+                    label: pm['label'] as String,
+                    selected: cart.selectedPaymentMethod == pm['key'] as String,
+                    onTap: () => notifier.selectPayment(pm['key'] as String),
                   ),
                 ),
                 const SizedBox(height: 8),
