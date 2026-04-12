@@ -23,8 +23,12 @@ class CheckoutScreen extends ConsumerWidget {
     final notifier = ref.read(cartProvider.notifier);
 
     const paymentMethods = [
-      {'key': 'card', 'icon': '💳', 'label': 'Credit / Debit Card'},
-      {'key': 'cash', 'icon': '💵', 'label': 'Cash on Pickup'},
+      {
+        'key': 'card',
+        'icon': Icons.credit_card,
+        'label': 'Credit / Debit Card',
+      },
+      {'key': 'cash', 'icon': Icons.payments, 'label': 'Cash on Pickup'},
     ];
 
     return Scaffold(
@@ -59,13 +63,19 @@ class CheckoutScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '📍 PICKUP',
-                        style: headStyle(
-                          size: 10,
-                          weight: FontWeight.w800,
-                          color: kMuted,
-                        ).copyWith(letterSpacing: 0.5),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on, size: 10, color: kMuted),
+                          const SizedBox(width: 4),
+                          Text(
+                            'PICKUP',
+                            style: headStyle(
+                              size: 10,
+                              weight: FontWeight.w800,
+                              color: kMuted,
+                            ).copyWith(letterSpacing: 0.5),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -73,13 +83,19 @@ class CheckoutScreen extends ConsumerWidget {
                         style: bodyStyle(size: 13, weight: FontWeight.w600),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        '🕐 SLOT: ${cart.selectedTime}',
-                        style: headStyle(
-                          size: 10,
-                          weight: FontWeight.w700,
-                          color: kMuted,
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.access_time, size: 10, color: kMuted),
+                          const SizedBox(width: 4),
+                          Text(
+                            'SLOT: ${cart.selectedTime}',
+                            style: headStyle(
+                              size: 10,
+                              weight: FontWeight.w700,
+                              color: kMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -149,13 +165,13 @@ class CheckoutScreen extends ConsumerWidget {
             ),
             child: AppButton(
               label: _demoMode
-                  ? '🧺 Place Order (Demo) · \$${cart.total.toStringAsFixed(2)}'
-                  : '🧺 Place Order · \$${cart.total.toStringAsFixed(2)}',
+                  ? 'Place Order (Demo) · \$${cart.total.toStringAsFixed(2)}'
+                  : 'Place Order · \$${cart.total.toStringAsFixed(2)}',
               loading: orderState.loading,
               onTap: () async {
                 if (_demoMode) {
                   // Demo mode: bypass payment
-                  showToast(context, '🎭 Demo mode: Payment bypassed');
+                  showToast(context, 'Demo mode: Payment bypassed');
                 }
                 final success = await ref
                     .read(orderProvider.notifier)
@@ -166,7 +182,7 @@ class CheckoutScreen extends ConsumerWidget {
                 } else if (context.mounted) {
                   showToast(
                     context,
-                    '❌ ${ref.read(orderProvider).error ?? 'Failed to place order'}',
+                    'Error: ${ref.read(orderProvider).error ?? 'Failed to place order'}',
                   );
                 }
               },
@@ -240,7 +256,8 @@ class _PriceRow extends StatelessWidget {
 }
 
 class _PaymentRow extends StatelessWidget {
-  final String icon, label;
+  final IconData icon;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
   const _PaymentRow({
@@ -266,7 +283,7 @@ class _PaymentRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 20)),
+            Icon(icon, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(

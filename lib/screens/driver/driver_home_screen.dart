@@ -173,13 +173,19 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                     border: Border.all(color: kBorder),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
-                    '🏠 Customer',
-                    style: TextStyle(
-                      fontFamily: kFontHead,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.home, size: 12),
+                      SizedBox(width: 4),
+                      Text(
+                        'Customer',
+                        style: TextStyle(
+                          fontFamily: kFontHead,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -256,12 +262,19 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              child: const Text(
-                                '💰 Earnings',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.attach_money, size: 16),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Earnings',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -276,12 +289,19 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              child: const Text(
-                                '🔔 Simulate Job',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.notifications, size: 16),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Simulate Job',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -313,15 +333,21 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '🚗 CAR PICKUP',
-                          style: TextStyle(
-                            fontFamily: kFontHead,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: kCyan3,
-                            letterSpacing: 1,
-                          ),
+                        Row(
+                          children: const [
+                            Icon(Icons.directions_car, size: 10, color: kCyan3),
+                            SizedBox(width: 4),
+                            Text(
+                              'CAR PICKUP',
+                              style: TextStyle(
+                                fontFamily: kFontHead,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: kCyan3,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -332,13 +358,21 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        Text(
-                          '📍 Via Roma 15 → Car Wash Hub',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: kMuted,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          children: const [
+                            Icon(Icons.location_on, size: 12, color: kMuted),
+                            SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Via Roma 15 → Car Wash Hub',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 10),
                         Row(

@@ -50,14 +50,20 @@ class DriverActiveScreen extends StatelessWidget {
                   border: Border.all(color: kCyan3.withOpacity(.3)),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  '🚗 Car Pickup',
-                  style: TextStyle(
-                    fontFamily: kFontHead,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: kCyan3,
-                  ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.directions_car, size: 11, color: kCyan3),
+                    SizedBox(width: 4),
+                    Text(
+                      'Car Pickup',
+                      style: TextStyle(
+                        fontFamily: kFontHead,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: kCyan3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -117,7 +123,7 @@ class DriverActiveScreen extends StatelessWidget {
                             gradient: LinearGradient(colors: [kCyan3, kMint]),
                           ),
                           child: const Center(
-                            child: Text('👤', style: TextStyle(fontSize: 18)),
+                            child: Icon(Icons.person, size: 18),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -133,19 +139,25 @@ class DriverActiveScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              Text(
-                                '📞 Tap to call',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: kMuted,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              Row(
+                                children: const [
+                                  Icon(Icons.phone, size: 10, color: kMuted),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Tap to call',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: kMuted,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => showToast('📞 Calling customer...'),
+                          onTap: () => showToast('Calling customer...'),
                           child: Container(
                             width: 34,
                             height: 34,
@@ -155,7 +167,7 @@ class DriverActiveScreen extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: const Center(
-                              child: Text('📞', style: TextStyle(fontSize: 15)),
+                              child: Icon(Icons.phone, size: 15),
                             ),
                           ),
                         ),
@@ -175,12 +187,18 @@ class DriverActiveScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    const Text(
-                      '📍 Via Roma 15, Rome',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: const [
+                        Icon(Icons.location_on, size: 13),
+                        SizedBox(width: 4),
+                        Text(
+                          'Via Roma 15, Rome',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     const Align(
@@ -196,12 +214,18 @@ class DriverActiveScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    const Text(
-                      '🏭 Car Wash Hub',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: const [
+                        Icon(Icons.local_shipping, size: 13),
+                        SizedBox(width: 4),
+                        Text(
+                          'Car Wash Hub',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -224,10 +248,11 @@ class DriverActiveScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     _StatusBtn(
-                      label: '✓ Arrived at Pickup',
+                      label: 'Arrived at Pickup',
+                      icon: Icons.check_circle,
                       color: kCyan3,
                       onTap: () async {
-                        showToast('✅ Status: pickup');
+                        showToast('Status: pickup');
                         final o = state.currentOrder;
                         if (o != null)
                           await OrderService.updateStatus(o.id, 'pickup');
@@ -235,10 +260,11 @@ class DriverActiveScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     _StatusBtn(
-                      label: '🚗 Car Collected',
+                      label: 'Car Collected',
+                      icon: Icons.directions_car,
                       color: kMint2,
                       onTap: () async {
-                        showToast('✅ Status: washing');
+                        showToast('Status: washing');
                         final o = state.currentOrder;
                         if (o != null)
                           await OrderService.updateStatus(o.id, 'washing');
@@ -246,16 +272,17 @@ class DriverActiveScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     _StatusBtn(
-                      label: '✨ Wash Complete',
+                      label: 'Wash Complete',
+                      icon: Icons.auto_awesome,
                       color: kOrange,
                       onTap: () {
-                        showToast('✅ Status: ready');
+                        showToast('Status: ready');
                       },
                     ),
                     const SizedBox(height: 6),
                     ElevatedButton(
                       onPressed: () async {
-                        showToast('✅ Delivered!');
+                        showToast('Delivered!');
                         final o = state.currentOrder;
                         if (o != null)
                           await OrderService.updateStatus(o.id, 'delivered');
@@ -268,12 +295,19 @@ class DriverActiveScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        '✅ Mark Delivered',
-                        style: TextStyle(
-                          fontFamily: kFontHead,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.check_circle, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            'Mark Delivered',
+                            style: TextStyle(
+                              fontFamily: kFontHead,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -414,10 +448,12 @@ class DriverActiveScreen extends StatelessWidget {
 
 class _StatusBtn extends StatelessWidget {
   final String label;
+  final IconData icon;
   final Color color;
   final VoidCallback onTap;
   const _StatusBtn({
     required this.label,
+    required this.icon,
     required this.color,
     required this.onTap,
   });
@@ -437,13 +473,19 @@ class _StatusBtn extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: kFontHead,
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: kFontHead,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );

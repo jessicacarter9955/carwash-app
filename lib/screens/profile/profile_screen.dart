@@ -96,32 +96,32 @@ class ProfileScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       _MenuItem(
-                        icon: '✏️',
+                        icon: Icons.edit,
                         label: 'Edit Profile',
                         onTap: () {},
                       ),
                       _MenuItem(
-                        icon: '�',
+                        icon: Icons.swap_horiz,
                         label: 'Switch to Driver Mode',
                         onTap: () => context.push('/driver'),
                       ),
                       _MenuItem(
-                        icon: '�📦',
+                        icon: Icons.inventory_2,
                         label: 'My Orders',
                         onTap: () => context.push('/orders'),
                       ),
                       _MenuItem(
-                        icon: '💳',
+                        icon: Icons.payment,
                         label: 'Payment Methods',
                         onTap: () {},
                       ),
                       _MenuItem(
-                        icon: '🔔',
+                        icon: Icons.notifications,
                         label: 'Notifications',
                         onTap: () {},
                       ),
                       _MenuItem(
-                        icon: '❓',
+                        icon: Icons.help,
                         label: 'Help & Support',
                         onTap: () {},
                         isLast: true,
@@ -152,7 +152,8 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class _MenuItem extends StatelessWidget {
-  final String icon, label;
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
   final bool isLast;
   const _MenuItem({
@@ -173,14 +174,7 @@ class _MenuItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            SizedBox(
-              width: 28,
-              child: Text(
-                icon,
-                style: const TextStyle(fontSize: 18),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            SizedBox(width: 28, child: Icon(icon, size: 20)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
