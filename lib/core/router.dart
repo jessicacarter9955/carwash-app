@@ -12,14 +12,13 @@ import '../screens/profile/profile_screen.dart';
 import '../screens/rating/rating_screen.dart';
 import '../screens/location/address_input_screen.dart';
 import '../screens/driver/driver_view.dart';
+import '../screens/express/express_screen.dart';
+import '../screens/schedule/schedule_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/home',
-    redirect: (context, state) {
-      // No authentication required - allow all routes
-      return null;
-    },
+    redirect: (context, state) => null,
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const AuthScreen()),
       GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
@@ -33,6 +32,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/rating', builder: (_, __) => const RatingScreen()),
       GoRoute(path: '/address', builder: (_, __) => const AddressInputScreen()),
       GoRoute(path: '/driver', builder: (_, __) => const DriverView()),
+      GoRoute(path: '/express', builder: (_, __) => const ExpressScreen()),
+      GoRoute(path: '/schedule', builder: (_, __) => const ScheduleScreen()),
     ],
   );
 });
