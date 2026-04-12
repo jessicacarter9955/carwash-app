@@ -34,8 +34,7 @@ class WashGoMap extends StatelessWidget {
       ),
       children: [
         TileLayer(
-          urlTemplate:
-              'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.washgo.app',
         ),
         if (polylines.isNotEmpty) PolylineLayer(polylines: polylines),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as provider;
 import '../../core/constants.dart';
 import '../../state/app_state.dart';
 import 'driver_home_screen.dart';
@@ -24,7 +24,7 @@ class _DriverViewState extends ConsumerState<DriverView> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
+    return provider.ChangeNotifierProvider(
       create: (_) => AppState(),
       child: WillPopScope(
         onWillPop: () async {
