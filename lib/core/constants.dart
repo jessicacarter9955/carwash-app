@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // ── Supabase ──────────────────────────────────────────
 const String supabaseUrl = 'https://ofadiqbebzmrjyxzoxym.supabase.co';
@@ -57,21 +58,23 @@ TextStyle headStyle({
   double size = 14,
   FontWeight weight = FontWeight.w800,
   Color? color,
-}) => GoogleFonts.nunito(
-  fontSize: size,
-  fontWeight: weight,
-  color: color ?? kText,
-);
+}) =>
+    GoogleFonts.nunito(
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? kText,
+    );
 
 TextStyle bodyStyle({
   double size = 13,
   FontWeight weight = FontWeight.w400,
   Color? color,
-}) => GoogleFonts.dmSans(
-  fontSize: size,
-  fontWeight: weight,
-  color: color ?? kText,
-);
+}) =>
+    GoogleFonts.dmSans(
+      fontSize: size,
+      fontWeight: weight,
+      color: color ?? kText,
+    );
 
 // Font families
 const String kFontHead = 'Nunito';
@@ -91,8 +94,5 @@ const double kRomeLng = 12.5143;
 const String osrmBase = 'https://router.project-osrm.org/route/v1/driving';
 const String nominatimBase = 'https://nominatim.openstreetmap.org/reverse';
 
-// Mapbox token
-const String mapboxToken = String.fromEnvironment(
-  'MAPBOX_TOKEN',
-  defaultValue: '',
-);
+// Mapbox token - loaded from .env file
+final String mapboxToken = dotenv.env['MAPBOX_TOKEN'] ?? '';
