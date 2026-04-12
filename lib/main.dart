@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants.dart';
@@ -11,24 +10,18 @@ import 'providers/notification_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file (for local development only)
-  // In production, use --dart-define instead
-  try {
-    await dotenv.load(fileName: ".env");
-    print('✅ .env file loaded successfully');
-    print('MAPBOX_TOKEN from .env: ${dotenv.env['MAPBOX_TOKEN']}');
-  } catch (e) {
-    print('⚠️ .env file not found or failed to load: $e');
-    print('📝 Using --dart-define for MAPBOX_TOKEN');
-  }
-
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ),
+  );
 
-  await Supabase.initialize(url: kSupabaseUrl, anonKey: kSupabaseAnonKey);
+  await Supabase.initialize(
+    url: kSupabaseUrl,
+    anonKey: kSupabaseAnonKey,
+  );
 
   try {
     await Firebase.initializeApp();
@@ -44,7 +37,6 @@ class WashGoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    // Init notifications silently
     ref.watch(notificationProvider);
     ref.watch(fcmTokenProvider);
 
@@ -53,7 +45,10 @@ class WashGoApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: kBg,
-        colorScheme: ColorScheme.light(primary: kCyan, secondary: kMint),
+        colorScheme: ColorScheme.light(
+          primary: kCyan,
+          secondary: kMint,
+        ),
         useMaterial3: true,
       ),
       routerConfig: router,
