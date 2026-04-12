@@ -24,15 +24,18 @@ class _DriverViewState extends ConsumerState<DriverView> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_current != DScreen.home) {
-          goScreen(DScreen.home);
-          return false;
-        }
-        return true;
-      },
-      child: SafeArea(child: _buildScreen()),
+    return ChangeNotifierProvider(
+      create: (_) => AppState(),
+      child: WillPopScope(
+        onWillPop: () async {
+          if (_current != DScreen.home) {
+            goScreen(DScreen.home);
+            return false;
+          }
+          return true;
+        },
+        child: SafeArea(child: _buildScreen()),
+      ),
     );
   }
 

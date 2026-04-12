@@ -8,6 +8,7 @@ import '../../core/constants.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/location_provider.dart';
+import '../../providers/order_provider.dart';
 import '../../providers/pricing_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/app_toast.dart';
@@ -20,7 +21,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _mapController = MapController();
+  final _addressController = TextEditingController();
   bool _showNotificationPrompt = false;
+  bool _editingAddress = false;
 
   @override
   void initState() {
@@ -33,7 +36,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       // Show notification permission prompt
       _checkNotificationPermission();
+      // Initialize address controller
+      final location = ref.read(locationProvider);
+      _addressController.text = location.address;
     });
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    super.dispose();
   }
 
   @override
@@ -89,8 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.washgo.app',
               ),
               MarkerLayer(
@@ -293,60 +304,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 10),
                   // Address row
-                  GestureDetector(
-                    onTap: () => context.push('/address'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: kBg,
-                        border: Border.all(color: kBorder, width: 1.5),
-                        borderRadius: BorderRadius.circular(rSm),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: kCyan,
-                              shape: BoxShape.circle,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: kBg,
+                      border: Border.all(color: kBorder, width: 1.5),
+                      borderRadius: BorderRadius.circular(rSm),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: kCyan,
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'PICKUP ADDRESS',
-                                  style: headStyle(
-                                    size: 9,
-                                    weight: FontWeight.w800,
-                                    color: kMuted,
-                                  ).copyWith(letterSpacing: 0.8),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'PICKUP ADDRESS',
+                                style: headStyle(
+                                  size: 9,
+                                  weight: FontWeight.w800,
+                                  color: kMuted,
+                                ).copyWith(letterSpacing: 0.8),
+                              ),
+                              TextField(
+                                controller: _addressController,
+                                style: bodyStyle(
+                                  size: 12,
+                                  weight: FontWeight.w600,
                                 ),
-                                Text(
-                                  location.address,
-                                  style: bodyStyle(
-                                    size: 12,
-                                    weight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  border: InputBorder.none,
+                                  hintText: 'Enter address...',
                                 ),
-                              ],
-                            ),
+                                onSubmitted: (value) async {
+                                  if (value.trim().isNotEmpty) {
+                                    await ref
+                                        .read(locationProvider.notifier)
+                                        .geocodeAddress(value.trim());
+                                  }
+                                },
+                              ),
+                            ],
                           ),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: kMuted,
-                            size: 18,
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -356,7 +370,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       _QuickTile(
                         icon: Icons.local_shipping,
                         label: 'Track',
-                        onTap: () => context.push('/tracking'),
+                        onTap: () {
+                          // Check if there's an active order
+                          final orderState = ref.read(orderProvider);
+                          if (orderState.currentOrder != null) {
+                            context.push('/tracking');
+                          } else {
+                            showToast(context, 'No active order to track');
+                          }
+                        },
                       ),
                       const SizedBox(width: 8),
                       _QuickTile(
