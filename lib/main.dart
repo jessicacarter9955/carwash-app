@@ -11,8 +11,13 @@ import 'providers/notification_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
-  await dotenv.load(fileName: ".env");
+  // Load environment variables from .env file (for local development only)
+  // In production, use --dart-define instead
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    // .env file not found - production build, use --dart-define
+  }
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

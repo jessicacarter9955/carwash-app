@@ -94,5 +94,9 @@ const double kRomeLng = 12.5143;
 const String osrmBase = 'https://router.project-osrm.org/route/v1/driving';
 const String nominatimBase = 'https://nominatim.openstreetmap.org/reverse';
 
-// Mapbox token - loaded from .env file
-final String mapboxToken = dotenv.env['MAPBOX_TOKEN'] ?? '';
+// Mapbox token - set via --dart-define=MAPBOX_TOKEN=your_token_here
+// For local development, can also use .env file
+final String mapboxToken = String.fromEnvironment(
+  'MAPBOX_TOKEN',
+  defaultValue: dotenv.env['MAPBOX_TOKEN'] ?? '',
+);
