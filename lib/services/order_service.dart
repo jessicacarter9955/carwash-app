@@ -2,84 +2,61 @@ import '../core/supabase_client.dart';
 import '../models/order_model.dart';
 
 class OrderService {
-  // ── Place order (demo — no real DB write) ────────────
-  static OrderModel placeDemoOrder({
-    required String customerId,
-    required String serviceType,
-    required Map<String, dynamic> orderItems,
-    required double total,
-    required String pickupAddress,
-    required double lat,
-    required double lng,
-  }) {
-    final now = DateTime.now();
-    return OrderModel(
-      id: 'demo-order-${now.millisecondsSinceEpoch}',
-      customerId: customerId,
-      status: 'confirmed',
-      serviceType: serviceType,
-      items: orderItems,
-      subtotal: total,
-      serviceFee: 0.0,
-      addonFee: 0.0,
-      deliveryFee: 2.99,
-      total: total,
-      pickupAddress: pickupAddress,
-      pickupLat: lat,
-      pickupLng: lng,
-      pickupSlot: 'ASAP',
-      paymentMethod: 'card',
-      paymentStatus: 'paid',
-      createdAt: now,
-      updatedAt: now,
-    );
+  static Future<OrderModel?> getOrder(String orderId) async {
+    try {
+      final data =
+          await supabase.from('orders').select().eq('id', orderId).single();
+      return OrderModel.fromMap(data);
+    } catch (e) {
+      print('Error fetching order: $e');
+      return null;
+    }
   }
 
-  // ── Fetch customer orders ────────────────────────────
-  static Future<List<OrderModel>> fetchOrders(String customerId) async {
+  static Future<List<OrderModel>> getCustomerOrders(String customerId) async {
     try {
-      final data = await sb
+      final data = await supabase
           .from('orders')
           .select()
           .eq('customer_id', customerId)
           .order('created_at', ascending: false);
-      return (data as List)
-          .map((m) => OrderModel.fromMap(m as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
+      return (data as List).map((m) => OrderModel.fromMap(m)).toList();
+    } catch (e) {
+      print('Error fetching orders: $e');
       return [];
     }
   }
 
-  // ── Fetch latest order ───────────────────────────────
-  static Future<OrderModel?> fetchLatestOrder(String customerId) async {
+  static Future<List<OrderModel>> getDriverOrders(String driverId) async {
     try {
-      final data = await sb
+      final data = await supabase
           .from('orders')
           .select()
-          .eq('customer_id', customerId)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
-      if (data != null) return OrderModel.fromMap(data);
-    } catch (_) {}
-    return null;
+          .eq('driver_id', driverId)
+          .order('created_at', ascending: false);
+      return (data as List).map((m) => OrderModel.fromMap(m)).toList();
+    } catch (e) {
+      print('Error fetching driver orders: $e');
+      return [];
+    }
   }
 
-  // ── Update status ────────────────────────────────────
-  static Future<void> updateStatus(String orderId, String status) async {
+  static Future<void> updateOrderStatus(String orderId, String status) async {
     try {
-      await sb.from('orders').update({'status': status}).eq('id', orderId);
-    } catch (_) {}
-  }
-
-  // ── Accept order (driver) ────────────────────────────
-  static Future<void> acceptOrder(String orderId, String driverId) async {
-    try {
-      await sb
+      await supabaseAdmin
           .from('orders')
-          .update({'driver_id': driverId, 'status': 'confirmed'})
-          .eq('id', orderId);
-    } catch (_) {}
+          .update({'status': status}).eq('id', orderId);
+    } catch (e) {
+      print('Error updating order status: $e');
+    }
+  }
+
+  static Future<void> assignDriver(String orderId, String driverId) async {
+    try {
+      await supabaseAdmin.from('orders').update(
+          {'driver_id': driverId, 'status': 'assigned'}).eq('id', orderId);
+    } catch (e) {
+      print('Error assigning driver: $e');
+    }
   }
 }

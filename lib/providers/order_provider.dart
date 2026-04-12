@@ -23,12 +23,13 @@ class OrderState {
     List<OrderModel>? orders,
     bool? loading,
     String? error,
-  }) => OrderState(
-    currentOrder: currentOrder ?? this.currentOrder,
-    orders: orders ?? this.orders,
-    loading: loading ?? this.loading,
-    error: error,
-  );
+  }) =>
+      OrderState(
+        currentOrder: currentOrder ?? this.currentOrder,
+        orders: orders ?? this.orders,
+        loading: loading ?? this.loading,
+        error: error,
+      );
 }
 
 class OrderNotifier extends StateNotifier<OrderState> {
@@ -71,10 +72,8 @@ class OrderNotifier extends StateNotifier<OrderState> {
         return true;
       }
 
-      // Backend mode: Use service role client to bypass RLS
-      final sb = sbServiceRole;
-
-      final data = await sb
+      // Backend mode: Use admin client to bypass RLS
+      final data = await supabaseAdmin
           .from('orders')
           .insert({
             'customer_id': customerId,
@@ -100,7 +99,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       state = state.copyWith(currentOrder: order, loading: false);
 
       // Insert status history
-      await sb.from('order_status_history').insert({
+      await supabaseAdmin.from('order_status_history').insert({
         'order_id': order.id,
         'status': 'pending',
       });
@@ -115,11 +114,10 @@ class OrderNotifier extends StateNotifier<OrderState> {
   Future<void> fetchOrders() async {
     state = state.copyWith(loading: true);
     try {
-      final sb = _ref.read(supabaseProvider);
       final session = await _ref.read(authStateProvider.future);
       if (session == null) return;
 
-      final data = await sb
+      final data = await supabase
           .from('orders')
           .select()
           .eq('customer_id', session.user.id)
@@ -137,12 +135,11 @@ class OrderNotifier extends StateNotifier<OrderState> {
 
   Future<void> submitRating(int rating, List<String> tags) async {
     try {
-      final sb = _ref.read(supabaseProvider);
       final session = await _ref.read(authStateProvider.future);
       final order = state.currentOrder;
       if (session == null || order == null) return;
 
-      await sb.from('ratings').insert({
+      await supabase.from('ratings').insert({
         'order_id': order.id,
         'customer_id': session.user.id,
         'driver_id': order.driverId,
