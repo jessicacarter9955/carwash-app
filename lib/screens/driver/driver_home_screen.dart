@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
@@ -11,14 +13,14 @@ import '../../widgets/stat_tile.dart';
 import '../../widgets/toast_overlay.dart';
 import 'driver_view.dart';
 
-class DriverHomeScreen extends StatefulWidget {
+class DriverHomeScreen extends ConsumerStatefulWidget {
   final Function(DScreen) onNav;
   const DriverHomeScreen({super.key, required this.onNav});
   @override
-  State<DriverHomeScreen> createState() => _DriverHomeScreenState();
+  ConsumerState<DriverHomeScreen> createState() => _DriverHomeScreenState();
 }
 
-class _DriverHomeScreenState extends State<DriverHomeScreen> {
+class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
   bool _showReq = false;
   int _countdown = 15;
   Timer? _cdTimer;
@@ -30,8 +32,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   void _showIncoming() {
     final names = ['Alex M.', 'Sara L.', 'Marco B.', 'Anna T.'];
-    final price =
-        (8 + (DateTime.now().millisecond / 1000 * 12)).toStringAsFixed(2);
+    final price = (8 + (DateTime.now().millisecond / 1000 * 12))
+        .toStringAsFixed(2);
     final dist = (0.5 + (DateTime.now().second / 60 * 5)).toStringAsFixed(1);
     setState(() {
       _showReq = true;
@@ -128,8 +130,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   decoration: BoxDecoration(
                     color: state.driverOnline ? kMint.withOpacity(.12) : kBg,
                     border: Border.all(
-                      color:
-                          state.driverOnline ? kMint.withOpacity(.35) : kBorder,
+                      color: state.driverOnline
+                          ? kMint.withOpacity(.35)
+                          : kBorder,
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -157,6 +160,29 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => context.go('/home'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: kBg,
+                    border: Border.all(color: kBorder),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    '🏠 Customer',
+                    style: TextStyle(
+                      fontFamily: kFontHead,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -180,7 +206,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         border: Border.all(color: Colors.white, width: 2),
                       ),
                       child: const Center(
-                        child: Text('🧺', style: TextStyle(fontSize: 13)),
+                        child: Icon(
+                          Icons.directions_car,
+                          size: 13,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -284,7 +314,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          '🧺 LAUNDRY PICKUP',
+                          '🚗 CAR PICKUP',
                           style: TextStyle(
                             fontFamily: kFontHead,
                             fontSize: 9,
@@ -303,7 +333,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                           ),
                         ),
                         Text(
-                          '📍 Via Roma 15 → WashGo Hub',
+                          '📍 Via Roma 15 → Car Wash Hub',
                           style: const TextStyle(
                             fontSize: 11,
                             color: kMuted,

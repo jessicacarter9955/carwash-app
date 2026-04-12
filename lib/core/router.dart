@@ -11,6 +11,7 @@ import '../screens/orders/orders_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/rating/rating_screen.dart';
 import '../screens/location/address_input_screen.dart';
+import '../screens/driver/driver_view.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -31,6 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
       GoRoute(path: '/rating', builder: (_, __) => const RatingScreen()),
       GoRoute(path: '/address', builder: (_, __) => const AddressInputScreen()),
+      GoRoute(path: '/driver', builder: (_, __) => const DriverView()),
     ],
   );
 });

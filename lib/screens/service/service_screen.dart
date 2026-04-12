@@ -18,34 +18,34 @@ class ServiceScreen extends ConsumerWidget {
       {
         'key': 'standard',
         'name': 'Standard Wash',
-        'desc': 'Ready in 48h · Pickup & delivery included',
+        'desc': 'Exterior + interior · Pickup & delivery included',
         'extra': 0.0,
       },
       {
         'key': 'express',
         'name': 'Express Wash',
-        'desc': 'Ready in 24h · Priority driver',
+        'desc': 'Ready in 2h · Priority service',
         'extra': 4.9,
       },
       {
         'key': 'premium',
         'name': 'Premium Wash',
-        'desc': 'Delicate fabrics · Special treatment',
+        'desc': 'Full detail · Wax + polish',
         'extra': 7.5,
       },
     ];
 
     const addons = [
       {
-        'key': 'fold',
-        'name': 'Folding & Packaging',
-        'desc': 'Neatly folded in eco bags',
+        'key': 'wax',
+        'name': 'Wax Protection',
+        'desc': 'Premium carnauba wax',
         'price': 2.0,
       },
       {
-        'key': 'scent',
-        'name': 'Premium Scent',
-        'desc': 'Lavender, Cotton Fresh or Sport',
+        'key': 'interior',
+        'name': 'Interior Detailing',
+        'desc': 'Deep clean & leather conditioning',
         'price': 1.5,
       },
     ];

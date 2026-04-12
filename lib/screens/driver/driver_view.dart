@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../core/constants.dart';
+import '../../state/app_state.dart';
 import 'driver_home_screen.dart';
 import 'driver_active_screen.dart';
 import 'driver_delivery_screen.dart';
@@ -6,13 +11,14 @@ import 'driver_earnings_screen.dart';
 
 enum DScreen { home, active, delivery, earnings }
 
-class DriverView extends StatefulWidget {
+class DriverView extends ConsumerStatefulWidget {
   const DriverView({super.key});
+
   @override
-  State<DriverView> createState() => _DriverViewState();
+  ConsumerState<DriverView> createState() => _DriverViewState();
 }
 
-class _DriverViewState extends State<DriverView> {
+class _DriverViewState extends ConsumerState<DriverView> {
   DScreen _current = DScreen.home;
   void goScreen(DScreen s) => setState(() => _current = s);
 

@@ -51,7 +51,7 @@ class DriverActiveScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text(
-                  '🧺 Laundry Pickup',
+                  '🚗 Car Pickup',
                   style: TextStyle(
                     fontFamily: kFontHead,
                     fontSize: 11,
@@ -197,7 +197,7 @@ class DriverActiveScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     const Text(
-                      '🏭 WashGo Hub',
+                      '🏭 Car Wash Hub',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -235,7 +235,7 @@ class DriverActiveScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     _StatusBtn(
-                      label: '🧺 Items Collected',
+                      label: '🚗 Car Collected',
                       color: kMint2,
                       onTap: () async {
                         showToast('✅ Status: washing');
@@ -246,7 +246,7 @@ class DriverActiveScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     _StatusBtn(
-                      label: '📦 Ready for Delivery',
+                      label: '✨ Wash Complete',
                       color: kOrange,
                       onTap: () {
                         showToast('✅ Status: ready');
@@ -300,7 +300,7 @@ class DriverActiveScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Laundry Pickup',
+                          'Car Wash Pickup',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

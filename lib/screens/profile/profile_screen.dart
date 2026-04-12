@@ -21,13 +21,21 @@ class ProfileScreen extends ConsumerWidget {
           Container(
             color: kBg.withOpacity(0.95),
             padding: EdgeInsets.fromLTRB(
-                14, MediaQuery.of(context).padding.top + 12, 14, 10),
-            child: Row(children: [
-              const BackButtonWidget(),
-              const SizedBox(width: 10),
-              Text('Profile',
-                  style: headStyle(size: 16, weight: FontWeight.w800)),
-            ]),
+              14,
+              MediaQuery.of(context).padding.top + 12,
+              14,
+              10,
+            ),
+            child: Row(
+              children: [
+                const BackButtonWidget(),
+                const SizedBox(width: 10),
+                Text(
+                  'Profile',
+                  style: headStyle(size: 16, weight: FontWeight.w800),
+                ),
+              ],
+            ),
           ),
           Expanded(
             child: ListView(
@@ -36,56 +44,88 @@ class ProfileScreen extends ConsumerWidget {
                 // Hero
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: Column(children: [
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [kCyan, kMint]),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                              color: kCyan.withOpacity(0.3), blurRadius: 16)
-                        ],
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [kCyan, kMint],
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: kCyan.withOpacity(0.3),
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 36,
+                        ),
                       ),
-                      child: const Icon(Icons.person,
-                          color: Colors.white, size: 36),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(profile.value?.fullName ?? 'User',
-                        style: headStyle(size: 20, weight: FontWeight.w900)),
-                    const SizedBox(height: 2),
-                    Text(session?.user.email ?? '--',
-                        style: bodyStyle(size: 12, color: kMuted)),
-                    const SizedBox(height: 2),
-                    Text(profile.value?.phone ?? '--',
-                        style: bodyStyle(size: 12, color: kMuted)),
-                  ]),
+                      const SizedBox(height: 10),
+                      Text(
+                        profile.value?.fullName ?? 'User',
+                        style: headStyle(size: 20, weight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        session?.user.email ?? '--',
+                        style: bodyStyle(size: 12, color: kMuted),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        profile.value?.phone ?? '--',
+                        style: bodyStyle(size: 12, color: kMuted),
+                      ),
+                    ],
+                  ),
                 ),
                 // Menu
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                      color: kSurface,
-                      border: Border.all(color: kBorder),
-                      borderRadius: BorderRadius.circular(rMd)),
+                    color: kSurface,
+                    border: Border.all(color: kBorder),
+                    borderRadius: BorderRadius.circular(rMd),
+                  ),
                   child: Column(
                     children: [
                       _MenuItem(
-                          icon: '✏️', label: 'Edit Profile', onTap: () {}),
+                        icon: '✏️',
+                        label: 'Edit Profile',
+                        onTap: () {},
+                      ),
                       _MenuItem(
-                          icon: '📦',
-                          label: 'My Orders',
-                          onTap: () => context.push('/orders')),
+                        icon: '�',
+                        label: 'Switch to Driver Mode',
+                        onTap: () => context.push('/driver'),
+                      ),
                       _MenuItem(
-                          icon: '💳', label: 'Payment Methods', onTap: () {}),
+                        icon: '�📦',
+                        label: 'My Orders',
+                        onTap: () => context.push('/orders'),
+                      ),
                       _MenuItem(
-                          icon: '🔔', label: 'Notifications', onTap: () {}),
+                        icon: '💳',
+                        label: 'Payment Methods',
+                        onTap: () {},
+                      ),
                       _MenuItem(
-                          icon: '❓',
-                          label: 'Help & Support',
-                          onTap: () {},
-                          isLast: true),
+                        icon: '🔔',
+                        label: 'Notifications',
+                        onTap: () {},
+                      ),
+                      _MenuItem(
+                        icon: '❓',
+                        label: 'Help & Support',
+                        onTap: () {},
+                        isLast: true,
+                      ),
                     ],
                   ),
                 ),
@@ -115,11 +155,12 @@ class _MenuItem extends StatelessWidget {
   final String icon, label;
   final VoidCallback onTap;
   final bool isLast;
-  const _MenuItem(
-      {required this.icon,
-      required this.label,
-      required this.onTap,
-      this.isLast = false});
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -130,18 +171,26 @@ class _MenuItem extends StatelessWidget {
         decoration: BoxDecoration(
           border: isLast ? null : Border(bottom: BorderSide(color: kBorder)),
         ),
-        child: Row(children: [
-          SizedBox(
+        child: Row(
+          children: [
+            SizedBox(
               width: 28,
-              child: Text(icon,
-                  style: const TextStyle(fontSize: 18),
-                  textAlign: TextAlign.center)),
-          const SizedBox(width: 12),
-          Expanded(
-              child: Text(label,
-                  style: bodyStyle(size: 13, weight: FontWeight.w600))),
-          const Icon(Icons.chevron_right, color: kMuted, size: 18),
-        ]),
+              child: Text(
+                icon,
+                style: const TextStyle(fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: bodyStyle(size: 13, weight: FontWeight.w600),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: kMuted, size: 18),
+          ],
+        ),
       ),
     );
   }

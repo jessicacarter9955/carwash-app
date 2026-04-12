@@ -12,6 +12,9 @@ import '../../widgets/back_button_widget.dart';
 class CheckoutScreen extends ConsumerWidget {
   const CheckoutScreen({super.key});
 
+  // Demo mode flag - set to true to bypass payment
+  static const bool _demoMode = true;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartProvider);
@@ -31,13 +34,21 @@ class CheckoutScreen extends ConsumerWidget {
           Container(
             color: kBg.withOpacity(0.95),
             padding: EdgeInsets.fromLTRB(
-                14, MediaQuery.of(context).padding.top + 12, 14, 10),
-            child: Row(children: [
-              const BackButtonWidget(),
-              const SizedBox(width: 10),
-              Text('Order Summary',
-                  style: headStyle(size: 16, weight: FontWeight.w800)),
-            ]),
+              14,
+              MediaQuery.of(context).padding.top + 12,
+              14,
+              10,
+            ),
+            child: Row(
+              children: [
+                const BackButtonWidget(),
+                const SizedBox(width: 10),
+                Text(
+                  'Order Summary',
+                  style: headStyle(size: 16, weight: FontWeight.w800),
+                ),
+              ],
+            ),
           ),
           Expanded(
             child: ListView(
@@ -45,56 +56,83 @@ class CheckoutScreen extends ConsumerWidget {
               children: [
                 // Pickup info
                 _Card(
-                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('📍 PICKUP',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '📍 PICKUP',
                         style: headStyle(
-                                size: 10,
-                                weight: FontWeight.w800,
-                                color: kMuted)
-                            .copyWith(letterSpacing: 0.5)),
-                    const SizedBox(height: 4),
-                    Text(location.address,
-                        style: bodyStyle(size: 13, weight: FontWeight.w600)),
-                    const SizedBox(height: 6),
-                    Text('🕐 SLOT: ${cart.selectedTime}',
+                          size: 10,
+                          weight: FontWeight.w800,
+                          color: kMuted,
+                        ).copyWith(letterSpacing: 0.5),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        location.address,
+                        style: bodyStyle(size: 13, weight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '🕐 SLOT: ${cart.selectedTime}',
                         style: headStyle(
-                            size: 10, weight: FontWeight.w700, color: kMuted)),
-                  ],
-                )),
+                          size: 10,
+                          weight: FontWeight.w700,
+                          color: kMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 _SectionLabel('Price Breakdown'),
                 _Card(
-                    child: Column(
-                  children: [
-                    _PriceRow('Items subtotal',
-                        '\$${cart.itemsTotal.toStringAsFixed(2)}'),
-                    _PriceRow('Service upgrade',
-                        '\$${cart.serviceExtra.toStringAsFixed(2)}'),
-                    _PriceRow(
-                        'Add-ons', '\$${cart.addonExtra.toStringAsFixed(2)}'),
-                    _PriceRow('Pickup & Delivery', '\$2.99'),
-                    const Divider(height: 16, color: kBorder),
-                    _PriceRow('Total', '\$${cart.total.toStringAsFixed(2)}',
-                        isTotal: true),
-                  ],
-                )),
+                  child: Column(
+                    children: [
+                      _PriceRow(
+                        'Items subtotal',
+                        '\$${cart.itemsTotal.toStringAsFixed(2)}',
+                      ),
+                      _PriceRow(
+                        'Service upgrade',
+                        '\$${cart.serviceExtra.toStringAsFixed(2)}',
+                      ),
+                      _PriceRow(
+                        'Add-ons',
+                        '\$${cart.addonExtra.toStringAsFixed(2)}',
+                      ),
+                      _PriceRow('Pickup & Delivery', '\$2.99'),
+                      const Divider(height: 16, color: kBorder),
+                      _PriceRow(
+                        'Total',
+                        '\$${cart.total.toStringAsFixed(2)}',
+                        isTotal: true,
+                      ),
+                    ],
+                  ),
+                ),
                 _SectionLabel('Payment'),
-                ...paymentMethods.map((pm) => _PaymentRow(
-                      icon: pm['icon']!,
-                      label: pm['label']!,
-                      selected: cart.selectedPaymentMethod == pm['key'],
-                      onTap: () => notifier.selectPayment(pm['key']!),
-                    )),
+                ...paymentMethods.map(
+                  (pm) => _PaymentRow(
+                    icon: pm['icon']!,
+                    label: pm['label']!,
+                    selected: cart.selectedPaymentMethod == pm['key'],
+                    onTap: () => notifier.selectPayment(pm['key']!),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.lock, size: 12, color: kMuted),
                     const SizedBox(width: 4),
-                    Text('Secured by Stripe',
-                        style: bodyStyle(
-                            size: 11, weight: FontWeight.w600, color: kMuted)),
+                    Text(
+                      'Secured by Stripe',
+                      style: bodyStyle(
+                        size: 11,
+                        weight: FontWeight.w600,
+                        color: kMuted,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -104,22 +142,32 @@ class CheckoutScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [kBg, kBg.withOpacity(0)]),
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [kBg, kBg.withOpacity(0)],
+              ),
             ),
             child: AppButton(
-              label: '🧺 Place Order · \$${cart.total.toStringAsFixed(2)}',
+              label: _demoMode
+                  ? '🧺 Place Order (Demo) · \$${cart.total.toStringAsFixed(2)}'
+                  : '🧺 Place Order · \$${cart.total.toStringAsFixed(2)}',
               loading: orderState.loading,
               onTap: () async {
-                final success =
-                    await ref.read(orderProvider.notifier).placeOrder();
+                if (_demoMode) {
+                  // Demo mode: bypass payment
+                  showToast(context, '🎭 Demo mode: Payment bypassed');
+                }
+                final success = await ref
+                    .read(orderProvider.notifier)
+                    .placeOrder();
                 if (success && context.mounted) {
                   ref.read(cartProvider.notifier).reset();
                   context.push('/searching');
                 } else if (context.mounted) {
-                  showToast(context,
-                      '❌ ${ref.read(orderProvider).error ?? 'Failed to place order'}');
+                  showToast(
+                    context,
+                    '❌ ${ref.read(orderProvider).error ?? 'Failed to place order'}',
+                  );
                 }
               },
             ),
@@ -135,15 +183,16 @@ class _Card extends StatelessWidget {
   const _Card({required this.child});
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-            color: kSurface,
-            border: Border.all(color: kBorder),
-            borderRadius: BorderRadius.circular(rMd),
-            boxShadow: shadowXs),
-        child: child,
-      );
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: kSurface,
+      border: Border.all(color: kBorder),
+      borderRadius: BorderRadius.circular(rMd),
+      boxShadow: shadowXs,
+    ),
+    child: child,
+  );
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -151,11 +200,16 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 14, bottom: 8),
-        child: Text(text.toUpperCase(),
-            style: headStyle(size: 10, weight: FontWeight.w800, color: kMuted)
-                .copyWith(letterSpacing: 1.2)),
-      );
+    padding: const EdgeInsets.only(top: 14, bottom: 8),
+    child: Text(
+      text.toUpperCase(),
+      style: headStyle(
+        size: 10,
+        weight: FontWeight.w800,
+        color: kMuted,
+      ).copyWith(letterSpacing: 1.2),
+    ),
+  );
 }
 
 class _PriceRow extends StatelessWidget {
@@ -164,33 +218,37 @@ class _PriceRow extends StatelessWidget {
   const _PriceRow(this.label, this.value, {this.isTotal = false});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label,
-                style: isTotal
-                    ? headStyle(size: 15, weight: FontWeight.w800)
-                    : bodyStyle(size: 13)),
-            Text(value,
-                style: isTotal
-                    ? headStyle(
-                        size: 15, weight: FontWeight.w800, color: kCyan3)
-                    : bodyStyle(size: 13, weight: FontWeight.w700)),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: isTotal
+              ? headStyle(size: 15, weight: FontWeight.w800)
+              : bodyStyle(size: 13),
         ),
-      );
+        Text(
+          value,
+          style: isTotal
+              ? headStyle(size: 15, weight: FontWeight.w800, color: kCyan3)
+              : bodyStyle(size: 13, weight: FontWeight.w700),
+        ),
+      ],
+    ),
+  );
 }
 
 class _PaymentRow extends StatelessWidget {
   final String icon, label;
   final bool selected;
   final VoidCallback onTap;
-  const _PaymentRow(
-      {required this.icon,
-      required this.label,
-      required this.selected,
-      required this.onTap});
+  const _PaymentRow({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -211,8 +269,11 @@ class _PaymentRow extends StatelessWidget {
             Text(icon, style: const TextStyle(fontSize: 20)),
             const SizedBox(width: 10),
             Expanded(
-                child: Text(label,
-                    style: bodyStyle(size: 13, weight: FontWeight.w600))),
+              child: Text(
+                label,
+                style: bodyStyle(size: 13, weight: FontWeight.w600),
+              ),
+            ),
             AnimatedOpacity(
               opacity: selected ? 1 : 0,
               duration: const Duration(milliseconds: 200),
