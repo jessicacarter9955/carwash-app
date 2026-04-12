@@ -25,8 +25,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final MapController _mapController = MapController();
-  bool _showNotificationPrompt = false;
   bool _mapReady = false;
+  bool _showNotificationPrompt = false;
   final TextEditingController _addressCtrl = TextEditingController();
   List<Map<String, dynamic>> _suggestions = [];
   Timer? _debounce;
@@ -35,17 +35,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Init notification service
       await NotificationService.init();
 
-      // Load pricing
       final pricing = await ref.read(pricingProvider.future);
       if (pricing.isNotEmpty) {
         ref.read(cartProvider.notifier).updatePricing(pricing);
       }
-
-      // Show notification permission prompt
       await _checkNotificationPermission();
+
+      // Set initial address text
+      final location = ref.read(locationProvider);
+      if (!location.loading) {
+        _addressCtrl.text = location.address;
+      }
     });
   }
 
@@ -59,14 +61,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Move map camera when location changes
     ref.listen(locationProvider, (previous, next) {
+      // Update address field
+      if (!next.loading && previous?.address != next.address) {
+        _addressCtrl.text = next.address;
+      }
+      // Move map
       if (!next.loading && _mapReady) {
         _mapController.move(LatLng(next.lat, next.lng), 15);
-        // Sync address field if empty or was auto-detected
-        if (_addressCtrl.text.isEmpty || previous?.address != next.address) {
-          _addressCtrl.text = next.address;
-        }
       }
     });
   }
@@ -80,9 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _requestNotificationPermission() async {
-    // Request local notification permission
     await NotificationService.requestPermission();
-    // Request FCM permission + save token
     await ref.read(fcmTokenProvider.future);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notification_prompt_shown', true);
@@ -103,15 +103,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() => _suggestions = []);
     await ref.read(locationProvider.notifier).refresh();
     final location = ref.read(locationProvider);
+    _addressCtrl.text = location.address;
     if (_mapReady) {
       _mapController.move(LatLng(location.lat, location.lng), 15);
     }
-    _addressCtrl.text = location.address;
   }
 
   Future<void> _fetchSuggestions(String query) async {
     if (query.length < 3) {
-      setState(() => _suggestions = []);
+      if (mounted) setState(() => _suggestions = []);
       return;
     }
     try {
@@ -124,12 +124,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         '&proximity=$kDefaultLng,$kDefaultLat',
       );
       final response = await http.get(url);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && mounted) {
         final data = json.decode(response.body);
         final features = data['features'] as List;
-        if (mounted) {
-          setState(() => _suggestions = features.cast<Map<String, dynamic>>());
-        }
+        setState(() => _suggestions = features.cast<Map<String, dynamic>>());
       }
     } catch (e) {
       debugPrint('Suggestions error: $e');
@@ -173,12 +171,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: LatLng(location.lat, location.lng),
-              zoom: 15,
+              initialCenter: LatLng(location.lat, location.lng),
+              initialZoom: 15,
               interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-              onMapReady: () {
-                setState(() => _mapReady = true);
-              },
+              onMapReady: () => setState(() => _mapReady = true),
             ),
             children: [
               TileLayer(
@@ -191,8 +187,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // User marker
                   Marker(
                     point: LatLng(location.lat, location.lng),
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
                     child: Container(
                       decoration: BoxDecoration(
                         color: kMint,
@@ -208,11 +204,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: const Icon(
                         Icons.person,
                         color: Colors.white,
-                        size: 14,
+                        size: 16,
                       ),
                     ),
                   ),
-                  // Simulated nearby drivers
+                  // Simulated nearby drivers — white car icon
                   ...[
                     [location.lat + 0.008, location.lng + 0.006],
                     [location.lat - 0.006, location.lng + 0.010],
@@ -220,8 +216,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ].map(
                     (coords) => Marker(
                       point: LatLng(coords[0], coords[1]),
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       child: Container(
                         decoration: BoxDecoration(
                           color: kCyan,
@@ -234,7 +230,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: const Text('🚗', style: TextStyle(fontSize: 16)),
+                        child: const Icon(
+                          Icons.directions_car,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -243,7 +243,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
 
-          // ── Location overlay card ─────────────────────────────
+          // ── Location card ─────────────────────────────────────
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 12,
@@ -254,12 +254,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
-                    vertical: 8,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
+                    color: Colors.white.withOpacity(0.97),
                     border: Border.all(color: kBorder),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     boxShadow: shadowSm,
                   ),
                   child: Column(
@@ -277,18 +277,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
+                          const Icon(Icons.location_on, size: 14, color: kCyan),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: TextField(
                               controller: _addressCtrl,
                               style: headStyle(
-                                size: 12,
+                                size: 13,
                                 weight: FontWeight.w700,
                               ),
                               decoration: InputDecoration(
                                 hintText: location.loading
                                     ? 'Detecting location...'
                                     : 'Type your address...',
-                                hintStyle: headStyle(size: 12, color: kMuted),
+                                hintStyle: headStyle(size: 13, color: kMuted),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.zero,
                                 isDense: true,
@@ -304,11 +306,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               },
                             ),
                           ),
-                          // Loading indicator
                           if (location.loading)
                             const SizedBox(
-                              width: 16,
-                              height: 16,
+                              width: 18,
+                              height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: kCyan,
@@ -336,11 +337,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
 
-                // Suggestions dropdown
+                // Suggestions
                 if (_suggestions.isNotEmpty)
                   Container(
                     margin: const EdgeInsets.only(top: 4),
-                    constraints: const BoxConstraints(maxHeight: 200),
+                    constraints: const BoxConstraints(maxHeight: 220),
                     decoration: BoxDecoration(
                       color: kSurface,
                       border: Border.all(color: kBorder),
@@ -351,11 +352,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       itemCount: _suggestions.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, color: kBorder),
                       itemBuilder: (context, index) {
                         final s = _suggestions[index];
                         final placeName = s['place_name'] as String;
-                        // Split into main name and secondary
                         final parts = placeName.split(',');
                         final main = parts.first.trim();
                         final secondary = parts.length > 1
@@ -473,12 +474,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Service tabs
                   Row(
                     children: [
                       _ServiceTab(
-                        icon: Icons.local_laundry_service,
-                        label: 'Laundry',
+                        icon: Icons.local_car_wash,
+                        label: 'Car Wash',
                         active: true,
                         onTap: () => context.push('/items'),
                       ),
@@ -497,7 +497,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  // Quick grid
                   Row(
                     children: [
                       _QuickTile(
@@ -531,7 +530,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-          // ── Notification permission prompt ────────────────────
+          // ── Notification prompt ───────────────────────────────
           if (_showNotificationPrompt)
             Positioned.fill(
               child: Container(
@@ -636,7 +635,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-// ── _ServiceTab ───────────────────────────────────────────────
+// ── Widgets ───────────────────────────────────────────────────
 class _ServiceTab extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -686,7 +685,6 @@ class _ServiceTab extends StatelessWidget {
   }
 }
 
-// ── _QuickTile ────────────────────────────────────────────────
 class _QuickTile extends StatelessWidget {
   final IconData icon;
   final String label;

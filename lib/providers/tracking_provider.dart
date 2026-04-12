@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants.dart';
 import '../services/routing_service.dart';
+import '../providers/notification_provider.dart';
 import 'auth_providers.dart';
 import 'order_provider.dart';
 
@@ -13,7 +14,9 @@ enum TrackingPhase { idle, toPickup, atPickup, toHub, washing, delivered }
 class TrackingState {
   final LatLng userPos;
   final LatLng driverPos;
+  final LatLng hubPos; // washing facility near user
   final List<LatLng> routeCoords;
+  final List<LatLng> travelledCoords; // already driven - grey
   final int simIndex;
   final TrackingPhase phase;
   final int etaMinutes;
@@ -21,13 +24,14 @@ class TrackingState {
   final String driverPlate;
   final double driverRating;
   final double driverRotation;
-  // Key status for car wash
-  final String keyStatus; // with_customer, with_driver, at_wash, returned
+  final String keyStatus;
 
   const TrackingState({
     this.userPos = const LatLng(kDefaultLat, kDefaultLng),
     this.driverPos = const LatLng(kDefaultLat + 0.01, kDefaultLng + 0.008),
+    this.hubPos = const LatLng(kDefaultLat + 0.015, kDefaultLng + 0.012),
     this.routeCoords = const [],
+    this.travelledCoords = const [],
     this.simIndex = 0,
     this.phase = TrackingPhase.idle,
     this.etaMinutes = 8,
@@ -41,7 +45,9 @@ class TrackingState {
   TrackingState copyWith({
     LatLng? userPos,
     LatLng? driverPos,
+    LatLng? hubPos,
     List<LatLng>? routeCoords,
+    List<LatLng>? travelledCoords,
     int? simIndex,
     TrackingPhase? phase,
     int? etaMinutes,
@@ -53,7 +59,9 @@ class TrackingState {
   }) => TrackingState(
     userPos: userPos ?? this.userPos,
     driverPos: driverPos ?? this.driverPos,
+    hubPos: hubPos ?? this.hubPos,
     routeCoords: routeCoords ?? this.routeCoords,
+    travelledCoords: travelledCoords ?? this.travelledCoords,
     simIndex: simIndex ?? this.simIndex,
     phase: phase ?? this.phase,
     etaMinutes: etaMinutes ?? this.etaMinutes,
@@ -72,18 +80,38 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
   TrackingNotifier(this._ref) : super(const TrackingState());
 
-  Future<void> startTracking(double userLat, double userLng) async {
+  /// Generate a washing facility near the user on a realistic offset
+  LatLng _generateHubNearUser(double userLat, double userLng) {
     final rnd = Random();
-    final driverLat = userLat + (rnd.nextDouble() - 0.5) * 0.02;
-    final driverLng = userLng + (rnd.nextDouble() - 0.5) * 0.02;
+    // Between 0.008 and 0.018 degrees away (~800m-2km)
+    final latOffset =
+        (0.008 + rnd.nextDouble() * 0.010) * (rnd.nextBool() ? 1 : -1);
+    final lngOffset =
+        (0.008 + rnd.nextDouble() * 0.010) * (rnd.nextBool() ? 1 : -1);
+    return LatLng(userLat + latOffset, userLng + lngOffset);
+  }
+
+  /// Generate driver start position near user
+  LatLng _generateDriverNearUser(double userLat, double userLng) {
+    final rnd = Random();
+    final latOffset =
+        (0.005 + rnd.nextDouble() * 0.008) * (rnd.nextBool() ? 1 : -1);
+    final lngOffset =
+        (0.005 + rnd.nextDouble() * 0.008) * (rnd.nextBool() ? 1 : -1);
+    return LatLng(userLat + latOffset, userLng + lngOffset);
+  }
+
+  Future<void> startTracking(double userLat, double userLng) async {
+    await NotificationService.init();
 
     final userPos = LatLng(userLat, userLng);
-    final driverPos = LatLng(driverLat, driverLng);
+    final driverPos = _generateDriverNearUser(userLat, userLng);
+    final hubPos = _generateHubNearUser(userLat, userLng);
 
-    // Fetch actual street-level route from Mapbox
+    // Route: driver → user
     final routeResult = await RoutingService.fetchRoute(
-      driverLat,
-      driverLng,
+      driverPos.latitude,
+      driverPos.longitude,
       userLat,
       userLng,
     );
@@ -91,15 +119,226 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     state = state.copyWith(
       userPos: userPos,
       driverPos: driverPos,
+      hubPos: hubPos,
       routeCoords: routeResult.coords,
+      travelledCoords: [],
       simIndex: 0,
       phase: TrackingPhase.toPickup,
       etaMinutes: int.tryParse(routeResult.dur) ?? 8,
       keyStatus: 'with_customer',
     );
 
-    _runSimulation(userPos);
+    // Notify start
+    await NotificationService.showLocal(
+      '🚗 Driver on the way!',
+      '${state.driverName} is heading to your location · ETA ${state.etaMinutes} min',
+    );
+
+    _runPhase1ToPickup(userPos, hubPos);
     _subscribeRealtime();
+  }
+
+  double _calculateRotation(LatLng from, LatLng to) {
+    final latDiff = to.latitude - from.latitude;
+    final lngDiff = to.longitude - from.longitude;
+    return atan2(lngDiff, latDiff) * 180 / pi;
+  }
+
+  // ── Phase 1: Driver → User ──────────────────────────────────
+  void _runPhase1ToPickup(LatLng userPos, LatLng hubPos) {
+    _simTimer?.cancel();
+    _simTimer = Timer.periodic(const Duration(milliseconds: 700), (
+      timer,
+    ) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      final idx = state.simIndex;
+      final coords = state.routeCoords;
+
+      if (idx >= coords.length) {
+        timer.cancel();
+        await _onArrivedAtPickup(userPos, hubPos);
+        return;
+      }
+
+      final remaining = coords.length - idx;
+      final eta = max(1, (remaining * 0.015).round());
+      final newPos = coords[idx];
+      final rotation = _calculateRotation(state.driverPos, newPos);
+
+      // Build travelled path
+      final travelled = List<LatLng>.from(state.travelledCoords)..add(newPos);
+
+      state = state.copyWith(
+        driverPos: newPos,
+        simIndex: idx + 1,
+        etaMinutes: eta,
+        phase: TrackingPhase.toPickup,
+        driverRotation: rotation,
+        travelledCoords: travelled,
+      );
+    });
+  }
+
+  // ── Arrived at pickup ───────────────────────────────────────
+  Future<void> _onArrivedAtPickup(LatLng userPos, LatLng hubPos) async {
+    state = state.copyWith(
+      phase: TrackingPhase.atPickup,
+      etaMinutes: 0,
+      travelledCoords: [],
+    );
+
+    await NotificationService.showLocal(
+      '📍 Driver arrived!',
+      '${state.driverName} is at your location',
+    );
+
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    // Phase 2: User → Hub (washing facility)
+    final routeResult = await RoutingService.fetchRoute(
+      userPos.latitude,
+      userPos.longitude,
+      hubPos.latitude,
+      hubPos.longitude,
+    );
+
+    state = state.copyWith(
+      routeCoords: routeResult.coords,
+      travelledCoords: [],
+      simIndex: 0,
+      phase: TrackingPhase.toHub,
+      driverPos: userPos,
+    );
+
+    await NotificationService.showLocal(
+      '🧺 Heading to washing facility',
+      'Your items are picked up and on the way to be washed',
+    );
+
+    _updateOrderStatus('pickup');
+    _runPhase2ToHub(hubPos);
+  }
+
+  // ── Phase 2: User → Hub ─────────────────────────────────────
+  void _runPhase2ToHub(LatLng hubPos) {
+    _simTimer?.cancel();
+    _simTimer = Timer.periodic(const Duration(milliseconds: 600), (
+      timer,
+    ) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      final idx = state.simIndex;
+      if (idx >= state.routeCoords.length) {
+        timer.cancel();
+        await _onAtHub(hubPos);
+        return;
+      }
+
+      final newPos = state.routeCoords[idx];
+      final rotation = _calculateRotation(state.driverPos, newPos);
+      final travelled = List<LatLng>.from(state.travelledCoords)..add(newPos);
+
+      state = state.copyWith(
+        driverPos: newPos,
+        simIndex: idx + 1,
+        driverRotation: rotation,
+        travelledCoords: travelled,
+      );
+    });
+  }
+
+  // ── At hub: washing ─────────────────────────────────────────
+  Future<void> _onAtHub(LatLng hubPos) async {
+    state = state.copyWith(phase: TrackingPhase.washing, travelledCoords: []);
+
+    await NotificationService.showLocal(
+      '🫧 Washing started!',
+      'Your items are now being washed at the facility',
+    );
+
+    _updateOrderStatus('washing');
+
+    await Future.delayed(const Duration(seconds: 4));
+    if (!mounted) return;
+
+    state = state.copyWith(phase: TrackingPhase.delivered, travelledCoords: []);
+
+    await NotificationService.showLocal(
+      '✅ All done!',
+      'Your wash is complete. Rate your experience!',
+    );
+
+    _updateOrderStatus('delivered');
+  }
+
+  // ── Return to user (optional) ───────────────────────────────
+  Future<void> startReturnToUser() async {
+    final userPos = state.userPos;
+    final hubPos = state.hubPos;
+
+    final routeResult = await RoutingService.fetchRoute(
+      hubPos.latitude,
+      hubPos.longitude,
+      userPos.latitude,
+      userPos.longitude,
+    );
+
+    state = state.copyWith(
+      routeCoords: routeResult.coords,
+      travelledCoords: [],
+      simIndex: 0,
+      phase: TrackingPhase.toPickup, // reuse toPickup phase for return
+      driverPos: hubPos,
+    );
+
+    await NotificationService.showLocal(
+      '🚗 On the way back!',
+      '${state.driverName} is returning your items',
+    );
+
+    _runReturnToUser(userPos);
+  }
+
+  void _runReturnToUser(LatLng userPos) {
+    _simTimer?.cancel();
+    _simTimer = Timer.periodic(const Duration(milliseconds: 700), (
+      timer,
+    ) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      final idx = state.simIndex;
+      if (idx >= state.routeCoords.length) {
+        timer.cancel();
+        state = state.copyWith(phase: TrackingPhase.delivered);
+        await NotificationService.showLocal(
+          '🏠 Delivered back to you!',
+          'Your items have been returned. Enjoy!',
+        );
+        return;
+      }
+
+      final newPos = state.routeCoords[idx];
+      final rotation = _calculateRotation(state.driverPos, newPos);
+      final travelled = List<LatLng>.from(state.travelledCoords)..add(newPos);
+
+      state = state.copyWith(
+        driverPos: newPos,
+        simIndex: idx + 1,
+        driverRotation: rotation,
+        travelledCoords: travelled,
+      );
+    });
   }
 
   void updateKeyStatus(String status) {
@@ -110,111 +349,16 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   Future<void> _updateOrderKeyStatus(String status) async {
     try {
       final order = _ref.read(orderProvider).currentOrder;
-      if (order == null) return;
-      // Skip backend update for local orders
-      if (order.id.startsWith('local-')) return;
+      if (order == null || order.id.startsWith('local-')) return;
       final sb = _ref.read(supabaseProvider);
       await sb.from('orders').update({'key_status': status}).eq('id', order.id);
     } catch (_) {}
   }
 
-  double _calculateRotation(LatLng start, LatLng end) {
-    final latDiff = end.latitude - start.latitude;
-    final lngDiff = end.longitude - start.longitude;
-    final angle = atan2(lngDiff, latDiff);
-    return angle * 180 / pi;
-  }
-
-  void _runSimulation(LatLng userPos) {
-    _simTimer?.cancel();
-    _simTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      final idx = state.simIndex;
-      final coords = state.routeCoords;
-
-      if (idx >= coords.length) {
-        timer.cancel();
-        _onArrivedAtPickup(userPos);
-        return;
-      }
-
-      final remaining = coords.length - idx;
-      final eta = max(1, (remaining * 0.015).round());
-      final newPos = coords[idx];
-      final rotation = _calculateRotation(state.driverPos, newPos);
-
-      state = state.copyWith(
-        driverPos: newPos,
-        simIndex: idx + 1,
-        etaMinutes: eta,
-        phase: TrackingPhase.toPickup,
-        driverRotation: rotation,
-      );
-    });
-  }
-
-  Future<void> _onArrivedAtPickup(LatLng userPos) async {
-    state = state.copyWith(phase: TrackingPhase.atPickup, etaMinutes: 0);
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-
-    // Phase 2: drive to hub using actual street-level route
-    final routeResult = await RoutingService.fetchRoute(
-      userPos.latitude,
-      userPos.longitude,
-      kHubLat,
-      kHubLng,
-    );
-
-    state = state.copyWith(
-      routeCoords: routeResult.coords,
-      simIndex: 0,
-      phase: TrackingPhase.toHub,
-      driverPos: userPos,
-    );
-
-    _simTimer = Timer.periodic(const Duration(milliseconds: 600), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      final idx = state.simIndex;
-      if (idx >= state.routeCoords.length) {
-        timer.cancel();
-        _onAtHub();
-        return;
-      }
-      final newPos = state.routeCoords[idx];
-      final rotation = _calculateRotation(state.driverPos, newPos);
-      state = state.copyWith(
-        driverPos: newPos,
-        simIndex: idx + 1,
-        driverRotation: rotation,
-      );
-    });
-
-    // Update order status
-    _updateOrderStatus('pickup');
-  }
-
-  Future<void> _onAtHub() async {
-    state = state.copyWith(phase: TrackingPhase.washing);
-    _updateOrderStatus('washing');
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
-    state = state.copyWith(phase: TrackingPhase.delivered);
-    _updateOrderStatus('delivered');
-  }
-
   Future<void> _updateOrderStatus(String status) async {
     try {
       final order = _ref.read(orderProvider).currentOrder;
-      if (order == null) return;
-      // Skip backend update for local orders
-      if (order.id.startsWith('local-')) return;
+      if (order == null || order.id.startsWith('local-')) return;
       final sb = _ref.read(supabaseProvider);
       await sb
           .from('orders')
@@ -233,10 +377,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   void _subscribeRealtime() {
     try {
       final order = _ref.read(orderProvider).currentOrder;
-      if (order == null) return;
-      // Skip realtime subscription for local orders
-      if (order.id.startsWith('local-')) return;
-
+      if (order == null || order.id.startsWith('local-')) return;
       final sb = _ref.read(supabaseProvider);
       _realtimeSub?.cancel();
       sb
@@ -250,12 +391,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
               column: 'id',
               value: order.id,
             ),
-            callback: (payload) {
-              final newStatus = payload.newRecord['status'] as String?;
-              if (newStatus != null) {
-                // Status updated from outside (e.g., driver app)
-              }
-            },
+            callback: (payload) {},
           )
           .subscribe();
     } catch (_) {}
@@ -264,7 +400,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   void stopTracking() {
     _simTimer?.cancel();
     _realtimeSub?.cancel();
-    state = const TrackingState(keyStatus: 'with_customer');
+    state = const TrackingState();
   }
 
   @override
