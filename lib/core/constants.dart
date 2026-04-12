@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // ── Supabase ──────────────────────────────────────────
 const String supabaseUrl = 'https://ofadiqbebzmrjyxzoxym.supabase.co';
@@ -95,8 +94,7 @@ const String osrmBase = 'https://router.project-osrm.org/route/v1/driving';
 const String nominatimBase = 'https://nominatim.openstreetmap.org/reverse';
 
 // Mapbox token - set via --dart-define=MAPBOX_TOKEN=your_token_here
-// For local development, can also use .env file
-final String mapboxToken = String.fromEnvironment(
+const String mapboxToken = String.fromEnvironment(
   'MAPBOX_TOKEN',
-  defaultValue: dotenv.env['MAPBOX_TOKEN'] ?? '',
+  defaultValue: '',
 );
