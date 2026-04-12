@@ -15,8 +15,11 @@ void main() async {
   // In production, use --dart-define instead
   try {
     await dotenv.load(fileName: ".env");
+    print('✅ .env file loaded successfully');
+    print('MAPBOX_TOKEN from .env: ${dotenv.env['MAPBOX_TOKEN']}');
   } catch (e) {
-    // .env file not found - production build, use --dart-define
+    print('⚠️ .env file not found or failed to load: $e');
+    print('📝 Using --dart-define for MAPBOX_TOKEN');
   }
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
