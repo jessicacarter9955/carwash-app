@@ -46,6 +46,10 @@ dependencies:
   flutter_stripe: ^10.0.0
   url_launcher: ^6.2.0
 
+# ↓ ADD THIS ENTIRE SECTION
+dependency_overrides:
+  app_links: ^3.5.1  # Force compatible version of transitive dependency
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
