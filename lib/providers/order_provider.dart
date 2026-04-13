@@ -46,7 +46,6 @@ class OrderNotifier extends StateNotifier<OrderState> {
           session?.user.id ?? '00000000-0000-0000-0000-000000000001';
 
       if (localMode) {
-        // Local mode: skip backend, create local order
         final order = OrderModel(
           id: 'local-${DateTime.now().millisecondsSinceEpoch}',
           customerId: customerId,
@@ -72,7 +71,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
         return true;
       }
 
-      // Backend mode: Use admin client to bypass RLS
+      // Backend mode
       final data = await supabaseAdmin
           .from('orders')
           .insert({
@@ -98,7 +97,6 @@ class OrderNotifier extends StateNotifier<OrderState> {
       final order = OrderModel.fromMap(data);
       state = state.copyWith(currentOrder: order, loading: false);
 
-      // Insert status history
       await supabaseAdmin.from('order_status_history').insert({
         'order_id': order.id,
         'status': 'pending',
