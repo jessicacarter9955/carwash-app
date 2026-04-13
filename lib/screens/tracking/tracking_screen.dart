@@ -112,31 +112,15 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     ),
                   ),
 
-                  // Driver marker — car icon, white
+                  // Driver marker — car icon, blue
                   Marker(
                     point: tracking.driverPos,
-                    width: 44,
-                    height: 44,
-                    child: Transform.rotate(
-                      angle: tracking.driverRotation * (3.14159 / 180),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: kCyan,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: kCyan.withOpacity(0.5),
-                              blurRadius: 14,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.directions_car,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
+                    width: 32,
+                    height: 32,
+                    child: const Icon(
+                      Icons.directions_car,
+                      color: kCyan,
+                      size: 24,
                     ),
                   ),
 
