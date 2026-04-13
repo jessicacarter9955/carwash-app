@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,8 +26,8 @@ class StripeService {
         },
       );
 
-      if (response.error != null) {
-        throw Exception(response.error!.message);
+      if (response.status != 200) {
+        throw Exception('Failed to create payment intent');
       }
 
       final clientSecret = response.data['clientSecret'] as String;
@@ -41,7 +41,7 @@ class StripeService {
           // Personalizzazione aspetto
           appearance: PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
-              primary: const Color(0xFF3B82F6),
+              primary: Color(0xFF3B82F6),
             ),
           ),
         ),
@@ -79,8 +79,8 @@ class StripeService {
         },
       );
 
-      if (response.error != null) {
-        throw Exception(response.error!.message);
+      if (response.status != 200) {
+        throw Exception('Failed to create checkout session');
       }
 
       final url = response.data['url'] as String;
@@ -105,8 +105,8 @@ class StripeService {
     try {
       final response = await _supabase.functions.invoke('customer-portal');
 
-      if (response.error != null) {
-        throw Exception(response.error!.message);
+      if (response.status != 200) {
+        throw Exception('Failed to open customer portal');
       }
 
       final url = response.data['url'] as String;
