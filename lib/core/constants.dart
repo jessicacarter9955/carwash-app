@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // ── Supabase ──────────────────────────────────────────
 const String supabaseUrl = 'https://ofadiqbebzmrjyxzoxym.supabase.co';
@@ -17,8 +16,11 @@ const String kSupabaseUrl = supabaseUrl;
 const String kSupabaseAnonKey = supabaseAnon;
 const String kSupabaseServiceRoleKey = supabaseServiceRole;
 
-// Mapbox token - loaded from .env
-String get mapboxToken => dotenv.env['MAPBOX_TOKEN'] ?? '';
+// Mapbox token - use --dart-define MAPBOX_TOKEN=<token> when running
+const String mapboxToken = String.fromEnvironment(
+  'MAPBOX_TOKEN',
+  defaultValue: '',
+);
 
 // Colors
 const kBg = Color(0xFFF4F5F6);
