@@ -1,0 +1,1342 @@
+. Setup Dipendenze
+YAML
+
+# pubspec.yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Supabase
+  supabase_flutter: ^2.3.0
+  
+  # Stripe
+  flutter_stripe: ^10.1.1
+  
+  # Utility
+  url_launcher: ^6.2.5
+  go_router: ^13.2.0
+Bash
+
+flutter pub get
+2. Configurazione Piattaforme
+Android
+XML
+
+<!-- android/app/src/main/AndroidManifest.xml -->
+<manifest>
+  <application>
+    <activity
+      android:name=".MainActivity"
+      android:exported="true"
+      android:launchMode="singleTask">
+      
+      <!-- Deep link per Stripe return -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="tuaapp" android:host="payment" />
+      </intent-filter>
+      
+    </activity>
+  </application>
+</manifest>
+Kotlin
+
+// android/app/build.gradle
+android {
+    defaultConfig {
+        minSdkVersion 21 // Minimo richiesto da flutter_stripe
+    }
+}
+iOS
+XML
+
+<!-- ios/Runner/Info.plist -->
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleTypeRole</key>
+    <string>Editor</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>tuaapp</string>
+    </array>
+  </dict>
+</array>
+
+<!-- Stripe 3D Secure -->
+<key>NSAppTransportSecurity</key>
+<dict>
+  <key>NSAllowsArbitraryLoads</key>
+  <true/>
+</dict>
+Swift
+
+// ios/Runner/AppDelegate.swift
+import UIKit
+import Flutter
+import Stripe
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+}
+3. Database Schema Supabase
+SQL
+
+-- Customers
+CREATE TABLE public.customers (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  stripe_customer_id TEXT UNIQUE,
+  email TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Products
+CREATE TABLE public.products (
+  id TEXT PRIMARY KEY,
+  name TEXT,
+  description TEXT,
+  image TEXT,
+  active BOOLEAN DEFAULT true,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Prices
+CREATE TABLE public.prices (
+  id TEXT PRIMARY KEY,
+  product_id TEXT REFERENCES public.products(id),
+  currency TEXT,
+  unit_amount BIGINT,
+  type TEXT CHECK (type IN ('one_time', 'recurring')),
+  interval TEXT,
+  interval_count INTEGER,
+  trial_period_days INTEGER,
+  active BOOLEAN DEFAULT true,
+  metadata JSONB
+);
+
+-- Subscriptions
+CREATE TABLE public.subscriptions (
+  id TEXT PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  status TEXT,
+  price_id TEXT REFERENCES public.prices(id),
+  quantity INTEGER,
+  cancel_at_period_end BOOLEAN,
+  current_period_start TIMESTAMPTZ,
+  current_period_end TIMESTAMPTZ,
+  canceled_at TIMESTAMPTZ,
+  ended_at TIMESTAMPTZ,
+  trial_start TIMESTAMPTZ,
+  trial_end TIMESTAMPTZ,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Orders (pagamenti singoli)
+CREATE TABLE public.orders (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  stripe_payment_intent_id TEXT,
+  stripe_checkout_session_id TEXT,
+  amount BIGINT,
+  currency TEXT DEFAULT 'eur',
+  status TEXT DEFAULT 'pending',
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.prices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Prodotti pubblici" ON public.products FOR SELECT USING (true);
+CREATE POLICY "Prezzi pubblici" ON public.prices FOR SELECT USING (true);
+CREATE POLICY "Solo il proprio customer" ON public.customers 
+  FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Solo le proprie subscription" ON public.subscriptions 
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Solo i propri ordini" ON public.orders 
+  FOR SELECT USING (auth.uid() = user_id);
+4. Edge Functions (Supabase)
+4a. create-checkout
+TypeScript
+
+// supabase/functions/create-checkout/index.ts
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@13.6.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+  apiVersion: "2023-10-16",
+});
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const token = req.headers.get("Authorization")!.replace("Bearer ", "");
+    const { data: { user } } = await supabase.auth.getUser(token);
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "Non autorizzato" }),
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
+    const { priceId, mode = "subscription", successUrl, cancelUrl } =
+      await req.json();
+
+    // Crea o recupera Stripe Customer
+    let stripeCustomerId: string;
+    const { data: existingCustomer } = await supabase
+      .from("customers")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+
+    if (existingCustomer?.stripe_customer_id) {
+      stripeCustomerId = existingCustomer.stripe_customer_id;
+    } else {
+      const stripeCustomer = await stripe.customers.create({
+        email: user.email!,
+        metadata: { supabase_user_id: user.id },
+      });
+      stripeCustomerId = stripeCustomer.id;
+
+      await supabase.from("customers").upsert({
+        id: user.id,
+        stripe_customer_id: stripeCustomerId,
+        email: user.email,
+      });
+    }
+
+    // Crea Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode,
+      success_url: successUrl ?? "tuaapp://payment/success",
+      cancel_url: cancelUrl ?? "tuaapp://payment/cancel",
+      metadata: { supabase_user_id: user.id },
+      ...(mode === "subscription" && {
+        subscription_data: {
+          metadata: { supabase_user_id: user.id },
+        },
+      }),
+    });
+
+    return new Response(
+      JSON.stringify({ sessionId: session.id, url: session.url }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+});
+4b. create-payment-intent (per pagamenti in-app nativi)
+TypeScript
+
+// supabase/functions/create-payment-intent/index.ts
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@13.6.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+  apiVersion: "2023-10-16",
+});
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const token = req.headers.get("Authorization")!.replace("Bearer ", "");
+    const { data: { user } } = await supabase.auth.getUser(token);
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "Non autorizzato" }),
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
+    const { amount, currency = "eur", description } = await req.json();
+
+    // Recupera o crea customer
+    let stripeCustomerId: string;
+    const { data: existingCustomer } = await supabase
+      .from("customers")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+
+    if (existingCustomer?.stripe_customer_id) {
+      stripeCustomerId = existingCustomer.stripe_customer_id;
+    } else {
+      const stripeCustomer = await stripe.customers.create({
+        email: user.email!,
+        metadata: { supabase_user_id: user.id },
+      });
+      stripeCustomerId = stripeCustomer.id;
+      await supabase.from("customers").upsert({
+        id: user.id,
+        stripe_customer_id: stripeCustomerId,
+        email: user.email,
+      });
+    }
+
+    // Crea PaymentIntent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency,
+      customer: stripeCustomerId,
+      description,
+      automatic_payment_methods: { enabled: true },
+      metadata: { supabase_user_id: user.id },
+    });
+
+    // Salva ordine in pending
+    await supabase.from("orders").insert({
+      user_id: user.id,
+      stripe_payment_intent_id: paymentIntent.id,
+      amount,
+      currency,
+      status: "pending",
+    });
+
+    return new Response(
+      JSON.stringify({
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+});
+4c. stripe-webhook
+TypeScript
+
+// supabase/functions/stripe-webhook/index.ts
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@13.6.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+  apiVersion: "2023-10-16",
+});
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
+
+serve(async (req) => {
+  const signature = req.headers.get("stripe-signature");
+  if (!signature) return new Response("No signature", { status: 400 });
+
+  try {
+    const body = await req.text();
+    const event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      Deno.env.get("STRIPE_WEBHOOK_SECRET")!
+    );
+
+    switch (event.type) {
+      case "product.created":
+      case "product.updated": {
+        const product = event.data.object as Stripe.Product;
+        await supabase.from("products").upsert({
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          image: product.images?.[0] ?? null,
+          active: product.active,
+          metadata: product.metadata,
+        });
+        break;
+      }
+      case "price.created":
+      case "price.updated": {
+        const price = event.data.object as Stripe.Price;
+        await supabase.from("prices").upsert({
+          id: price.id,
+          product_id:
+            typeof price.product === "string"
+              ? price.product
+              : price.product.id,
+          currency: price.currency,
+          unit_amount: price.unit_amount,
+          type: price.type,
+          interval: price.recurring?.interval ?? null,
+          interval_count: price.recurring?.interval_count ?? null,
+          trial_period_days: price.recurring?.trial_period_days ?? null,
+          active: price.active,
+          metadata: price.metadata,
+        });
+        break;
+      }
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const userId = sub.metadata.supabase_user_id;
+        if (!userId) break;
+
+        await supabase.from("subscriptions").upsert({
+          id: sub.id,
+          user_id: userId,
+          status: sub.status,
+          price_id: sub.items.data[0]?.price.id,
+          quantity: sub.items.data[0]?.quantity,
+          cancel_at_period_end: sub.cancel_at_period_end,
+          current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          canceled_at: sub.canceled_at
+            ? new Date(sub.canceled_at * 1000).toISOString()
+            : null,
+          ended_at: sub.ended_at
+            ? new Date(sub.ended_at * 1000).toISOString()
+            : null,
+          trial_start: sub.trial_start
+            ? new Date(sub.trial_start * 1000).toISOString()
+            : null,
+          trial_end: sub.trial_end
+            ? new Date(sub.trial_end * 1000).toISOString()
+            : null,
+          metadata: sub.metadata,
+        });
+        break;
+      }
+      case "payment_intent.succeeded": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        await supabase
+          .from("orders")
+          .update({ status: "completed" })
+          .eq("stripe_payment_intent_id", pi.id);
+        break;
+      }
+      case "payment_intent.payment_failed": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        await supabase
+          .from("orders")
+          .update({ status: "failed" })
+          .eq("stripe_payment_intent_id", pi.id);
+        break;
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+    });
+  }
+});
+toml
+
+# supabase/config.toml
+[functions.stripe-webhook]
+verify_jwt = false
+5. Flutter - Struttura del Progetto
+text
+
+lib/
+├── main.dart
+├── services/
+│   ├── stripe_service.dart       # Logica Stripe
+│   └── supabase_service.dart     # Logica Supabase
+├── models/
+│   ├── price_model.dart
+│   ├── product_model.dart
+│   └── subscription_model.dart
+├── providers/
+│   └── subscription_provider.dart
+└── screens/
+    ├── pricing_screen.dart
+    ├── payment_sheet_screen.dart
+    └── payment_success_screen.dart
+6. Flutter - Codice
+main.dart
+dart
+
+// lib/main.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Init Supabase
+  await Supabase.initialize(
+    url: 'https://xxxxx.supabase.co',
+    anonKey: 'eyJhbGciOi...',
+  );
+
+  // Init Stripe
+  Stripe.publishableKey = 'pk_test_...';
+  Stripe.merchantIdentifier = 'merchant.com.tuaapp'; // Solo iOS
+  Stripe.urlScheme = 'tuaapp'; // Deep link scheme
+  await Stripe.instance.applySettings();
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Tua App',
+      home: const PricingScreen(),
+    );
+  }
+}
+Models
+dart
+
+// lib/models/product_model.dart
+class ProductModel {
+  final String id;
+  final String name;
+  final String? description;
+  final String? image;
+  final bool active;
+
+  ProductModel({
+    required this.id,
+    required this.name,
+    this.description,
+    this.image,
+    required this.active,
+  });
+
+  factory ProductModel.fromMap(Map<String, dynamic> map) {
+    return ProductModel(
+      id: map['id'],
+      name: map['name'],
+      description: map['description'],
+      image: map['image'],
+      active: map['active'] ?? true,
+    );
+  }
+}
+
+// lib/models/price_model.dart
+class PriceModel {
+  final String id;
+  final String productId;
+  final String currency;
+  final int unitAmount;
+  final String type;
+  final String? interval;
+  final int? intervalCount;
+  final int? trialPeriodDays;
+  final bool active;
+  final ProductModel? product;
+
+  PriceModel({
+    required this.id,
+    required this.productId,
+    required this.currency,
+    required this.unitAmount,
+    required this.type,
+    this.interval,
+    this.intervalCount,
+    this.trialPeriodDays,
+    required this.active,
+    this.product,
+  });
+
+  factory PriceModel.fromMap(Map<String, dynamic> map) {
+    return PriceModel(
+      id: map['id'],
+      productId: map['product_id'],
+      currency: map['currency'],
+      unitAmount: map['unit_amount'],
+      type: map['type'],
+      interval: map['interval'],
+      intervalCount: map['interval_count'],
+      trialPeriodDays: map['trial_period_days'],
+      active: map['active'] ?? true,
+      product: map['products'] != null
+          ? ProductModel.fromMap(map['products'])
+          : null,
+    );
+  }
+
+  // Prezzo formattato (es. €9.99/mese)
+  String get formattedPrice {
+    final amount = (unitAmount / 100).toStringAsFixed(2);
+    final symbol = currency == 'eur' ? '€' : '\$';
+    if (interval != null) {
+      return '$symbol$amount/$interval';
+    }
+    return '$symbol$amount';
+  }
+}
+
+// lib/models/subscription_model.dart
+class SubscriptionModel {
+  final String id;
+  final String userId;
+  final String status;
+  final String priceId;
+  final DateTime currentPeriodEnd;
+  final bool cancelAtPeriodEnd;
+  final DateTime? trialEnd;
+
+  SubscriptionModel({
+    required this.id,
+    required this.userId,
+    required this.status,
+    required this.priceId,
+    required this.currentPeriodEnd,
+    required this.cancelAtPeriodEnd,
+    this.trialEnd,
+  });
+
+  factory SubscriptionModel.fromMap(Map<String, dynamic> map) {
+    return SubscriptionModel(
+      id: map['id'],
+      userId: map['user_id'],
+      status: map['status'],
+      priceId: map['price_id'],
+      currentPeriodEnd: DateTime.parse(map['current_period_end']),
+      cancelAtPeriodEnd: map['cancel_at_period_end'] ?? false,
+      trialEnd: map['trial_end'] != null
+          ? DateTime.parse(map['trial_end'])
+          : null,
+    );
+  }
+
+  bool get isActive => status == 'active' || status == 'trialing';
+}
+Stripe Service
+dart
+
+// lib/services/stripe_service.dart
+import 'package:flutter/foundation.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class StripeService {
+  final _supabase = Supabase.instance.client;
+
+  // ============================================================
+  // METODO 1: Payment Sheet (UI nativa di Stripe)
+  // Usato per pagamenti singoli in-app
+  // ============================================================
+  Future<void> presentPaymentSheet({
+    required int amount,
+    String currency = 'eur',
+    String? description,
+  }) async {
+    try {
+      // 1. Chiedi il PaymentIntent alla Edge Function
+      final response = await _supabase.functions.invoke(
+        'create-payment-intent',
+        body: {
+          'amount': amount,
+          'currency': currency,
+          'description': description,
+        },
+      );
+
+      if (response.error != null) {
+        throw Exception(response.error!.message);
+      }
+
+      final clientSecret = response.data['clientSecret'] as String;
+
+      // 2. Inizializza il Payment Sheet
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'La Tua App',
+          style: ThemeMode.system,
+          // Personalizzazione aspetto
+          appearance: PaymentSheetAppearance(
+            colors: PaymentSheetAppearanceColors(
+              primary: Colors.blue,
+            ),
+          ),
+        ),
+      );
+
+      // 3. Mostra il Payment Sheet
+      await Stripe.instance.presentPaymentSheet();
+
+      debugPrint('Pagamento completato!');
+    } on StripeException catch (e) {
+      if (e.error.code == FailureCode.Canceled) {
+        debugPrint('Pagamento annullato dall\'utente');
+        return;
+      }
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // METODO 2: Stripe Checkout (WebView/Browser)
+  // Usato principalmente per subscription
+  // ============================================================
+  Future<void> openCheckout({
+    required String priceId,
+    String mode = 'subscription',
+  }) async {
+    try {
+      final response = await _supabase.functions.invoke(
+        'create-checkout',
+        body: {
+          'priceId': priceId,
+          'mode': mode,
+          'successUrl': 'tuaapp://payment/success',
+          'cancelUrl': 'tuaapp://payment/cancel',
+        },
+      );
+
+      if (response.error != null) {
+        throw Exception(response.error!.message);
+      }
+
+      final url = response.data['url'] as String;
+      final uri = Uri.parse(url);
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      debugPrint('Errore checkout: $e');
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // METODO 3: Customer Portal (gestione abbonamento)
+  // ============================================================
+  Future<void> openCustomerPortal() async {
+    try {
+      final response = await _supabase.functions.invoke('customer-portal');
+
+      if (response.error != null) {
+        throw Exception(response.error!.message);
+      }
+
+      final url = response.data['url'] as String;
+      final uri = Uri.parse(url);
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Errore portale: $e');
+      rethrow;
+    }
+  }
+}
+Subscription Provider
+dart
+
+// lib/providers/subscription_provider.dart
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/subscription_model.dart';
+import '../models/price_model.dart';
+
+class SubscriptionProvider extends ChangeNotifier {
+  final _supabase = Supabase.instance.client;
+  
+  SubscriptionModel? _subscription;
+  List<PriceModel> _prices = [];
+  bool _loading = true;
+  RealtimeChannel? _channel;
+
+  SubscriptionModel? get subscription => _subscription;
+  List<PriceModel> get prices => _prices;
+  bool get loading => _loading;
+  bool get isActive => _subscription?.isActive ?? false;
+
+  Future<void> initialize() async {
+    await Future.wait([
+      _loadSubscription(),
+      _loadPrices(),
+    ]);
+    _listenToSubscriptionChanges();
+  }
+
+  Future<void> _loadSubscription() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      _loading = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final data = await _supabase
+          .from('subscriptions')
+          .select()
+          .eq('user_id', user.id)
+          .inFilter('status', ['active', 'trialing'])
+          .maybeSingle();
+
+      _subscription =
+          data != null ? SubscriptionModel.fromMap(data) : null;
+    } catch (e) {
+      debugPrint('Errore caricamento subscription: $e');
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _loadPrices() async {
+    try {
+      final data = await _supabase
+          .from('prices')
+          .select('*, products(*)')
+          .eq('active', true)
+          .order('unit_amount');
+
+      _prices = data.map((p) => PriceModel.fromMap(p)).toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Errore caricamento prezzi: $e');
+    }
+  }
+
+  void _listenToSubscriptionChanges() {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    _channel = _supabase
+        .channel('subscription-${user.id}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'subscriptions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: user.id,
+          ),
+          callback: (payload) {
+            debugPrint('Subscription aggiornata: ${payload.eventType}');
+            _loadSubscription(); // Ricarica
+          },
+        )
+        .subscribe();
+  }
+
+  @override
+  void dispose() {
+    _channel?.unsubscribe();
+    super.dispose();
+  }
+}
+Pricing Screen
+dart
+
+// lib/screens/pricing_screen.dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/subscription_provider.dart';
+import '../services/stripe_service.dart';
+import '../models/price_model.dart';
+
+class PricingScreen extends StatefulWidget {
+  const PricingScreen({super.key});
+
+  @override
+  State<PricingScreen> createState() => _PricingScreenState();
+}
+
+class _PricingScreenState extends State<PricingScreen> {
+  final _stripeService = StripeService();
+  String? _loadingPriceId;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<SubscriptionProvider>().initialize();
+  }
+
+  Future<void> _subscribe(PriceModel price) async {
+    setState(() => _loadingPriceId = price.id);
+
+    try {
+      // Usa Payment Sheet per pagamenti singoli
+      // Usa Checkout per subscriptions
+      if (price.type == 'one_time') {
+        await _stripeService.presentPaymentSheet(
+          amount: price.unitAmount,
+          currency: price.currency,
+          description: price.product?.name,
+        );
+        _showSuccess('Pagamento completato!');
+      } else {
+        await _stripeService.openCheckout(
+          priceId: price.id,
+          mode: 'subscription',
+        );
+      }
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      setState(() => _loadingPriceId = null);
+    }
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Scegli il tuo piano')),
+      body: Consumer<SubscriptionProvider>(
+        builder: (context, provider, child) {
+          if (provider.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.isActive) {
+            return _buildActiveSubscription(provider);
+          }
+
+          return _buildPricingList(provider.prices);
+        },
+      ),
+    );
+  }
+
+  Widget _buildActiveSubscription(SubscriptionProvider provider) {
+    final sub = provider.subscription!;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green, size: 80),
+            const SizedBox(height: 16),
+            Text(
+              'Abbonamento Attivo',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Status: ${sub.status}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            Text(
+              'Rinnova il: ${_formatDate(sub.currentPeriodEnd)}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 32),
+            OutlinedButton.icon(
+              onPressed: _stripeService.openCustomerPortal,
+              icon: const Icon(Icons.settings),
+              label: const Text('Gestisci Abbonamento'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPricingList(List<PriceModel> prices) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: prices.length,
+      itemBuilder: (context, index) {
+        final price = prices[index];
+        return _PriceCard(
+          price: price,
+          isLoading: _loadingPriceId == price.id,
+          onTap: () => _subscribe(price),
+        );
+      },
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+class _PriceCard extends StatelessWidget {
+  final PriceModel price;
+  final bool isLoading;
+  final VoidCallback onTap;
+
+  const _PriceCard({
+    required this.price,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Immagine prodotto
+            if (price.product?.image != null)
+              Image.network(
+                price.product!.image!,
+                height: 60,
+                width: 60,
+              ),
+
+            // Nome prodotto
+            Text(
+              price.product?.name ?? 'Piano',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 4),
+
+            // Descrizione
+            if (price.product?.description != null)
+              Text(
+                price.product!.description!,
+                style: const TextStyle(color: Colors.grey),
+              ),
+            const SizedBox(height: 12),
+
+            // Prezzo
+            Text(
+              price.formattedPrice,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+            ),
+
+            // Trial
+            if (price.trialPeriodDays != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '${price.trialPeriodDays} giorni di prova gratuita',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Bottone
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: isLoading ? null : onTap,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        price.type == 'recurring'
+                            ? 'Abbonati'
+                            : 'Acquista',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+Payment Screen (con CardField nativo)
+dart
+
+// lib/screens/payment_sheet_screen.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import '../services/stripe_service.dart';
+
+// Esempio con CardField integrato nella schermata
+class NativePaymentScreen extends StatefulWidget {
+  final int amount;
+  final String currency;
+  final String? description;
+
+  const NativePaymentScreen({
+    super.key,
+    required this.amount,
+    required this.currency,
+    this.description,
+  });
+
+  @override
+  State<NativePaymentScreen> createState() => _NativePaymentScreenState();
+}
+
+class _NativePaymentScreenState extends State<NativePaymentScreen> {
+  final _stripeService = StripeService();
+  bool _loading = false;
+  bool _cardComplete = false;
+
+  Future<void> _pay() async {
+    setState(() => _loading = true);
+
+    try {
+      await _stripeService.presentPaymentSheet(
+        amount: widget.amount,
+        currency: widget.currency,
+        description: widget.description,
+      );
+
+      if (mounted) {
+        Navigator.pop(context, true); // Successo
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Errore: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Pagamento')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Riepilogo ordine
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Riepilogo',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(widget.description ?? 'Acquisto'),
+                        Text(
+                          '€${(widget.amount / 100).toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Payment Sheet si apre come bottom sheet
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _pay,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.blue,
+                ),
+                child: _loading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Paga €${(widget.amount / 100).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Badge sicurezza
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock, size: 16, color: Colors.grey),
+                SizedBox(width: 4),
+                Text(
+                  'Pagamento sicuro con Stripe',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+7. Deploy Edge Functions
+Bash
+
+# Imposta i secrets
+supabase secrets set STRIPE_SECRET_KEY=sk_test_...
+supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Deploy
+supabase functions deploy create-checkout
+supabase functions deploy create-payment-intent
+supabase functions deploy customer-portal
+supabase functions deploy stripe-webhook
+
+# Verifica
+supabase functions list
+8. Configurazione Webhook su Stripe Dashboard
+text
+
+URL: https://<project-ref>.supabase.co/functions/v1/stripe-webhook
+
+Eventi:
+  ✅ product.created / updated / deleted
+  ✅ price.created / updated / deleted
+  ✅ customer.subscription.created / updated / deleted
+  ✅ checkout.session.completed
+  ✅ payment_intent.succeeded
+  ✅ payment_intent.payment_failed
+  ✅ invoice.paid / payment_failed
+Flusso Completo
+text
+
+PAGAMENTO SINGOLO (Payment Sheet)
+──────────────────────────────────
+Flutter → Edge Fn "create-payment-intent"
+       → Stripe crea PaymentIntent
+       → Flutter mostra Payment Sheet nativo
+       → Utente inserisce carta
+       → Stripe conferma
+       → Webhook aggiorna orders in Supabase
+       → Realtime notifica Flutter ✅
+
+SUBSCRIPTION (Checkout)
+──────────────────────────────────
+Flutter → Edge Fn "create-checkout"
+       → Stripe crea Checkout Session
+       → Flutter apre browser/webview
+       → Utente completa pagamento
+       → Redirect a tuaapp://payment/success
+       → Webhook crea subscription in Supabase
+       → Realtime notifica Flutter ✅
+Carte di Test
+text
+
+✅ Successo:           4242 4242 4242 4242
+🔐 3D Secure:          4000 0025 0000 3155
+❌ Rifiutata:          4000 0000 0000 9995
+💳 Fondi insufficienti: 4000 0000 0000 9995
+📅 Scadenza: qualsiasi data futura | CVC: qualsiasi 3 cifre
+Hai domande su una parte specifica?

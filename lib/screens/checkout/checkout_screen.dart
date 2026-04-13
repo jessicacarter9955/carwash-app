@@ -5,6 +5,7 @@ import '../../core/constants.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../services/stripe_service.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/back_button_widget.dart';
@@ -169,10 +170,24 @@ class CheckoutScreen extends ConsumerWidget {
                   : 'Place Order · \$${cart.total.toStringAsFixed(2)}',
               loading: orderState.loading,
               onTap: () async {
-                if (_demoMode) {
-                  // Demo mode: bypass payment
+                if (cart.selectedPaymentMethod == 'card' && !_demoMode) {
+                  // Stripe payment flow
+                  try {
+                    final stripeService = StripeService();
+                    await stripeService.presentPaymentSheet(
+                      amount: (cart.total * 100).toInt(), // Convert to cents
+                      currency: 'eur',
+                      description: 'WashGo Order',
+                    );
+                    showToast(context, 'Payment successful!');
+                  } catch (e) {
+                    showToast(context, 'Payment failed: $e');
+                    return;
+                  }
+                } else if (_demoMode) {
                   showToast(context, 'Demo mode: Payment bypassed');
                 }
+
                 final success = await ref
                     .read(orderProvider.notifier)
                     .placeOrder(localMode: true);
@@ -199,16 +214,16 @@ class _Card extends StatelessWidget {
   const _Card({required this.child});
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: kSurface,
-      border: Border.all(color: kBorder),
-      borderRadius: BorderRadius.circular(rMd),
-      boxShadow: shadowXs,
-    ),
-    child: child,
-  );
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: kSurface,
+          border: Border.all(color: kBorder),
+          borderRadius: BorderRadius.circular(rMd),
+          boxShadow: shadowXs,
+        ),
+        child: child,
+      );
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -216,16 +231,16 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 14, bottom: 8),
-    child: Text(
-      text.toUpperCase(),
-      style: headStyle(
-        size: 10,
-        weight: FontWeight.w800,
-        color: kMuted,
-      ).copyWith(letterSpacing: 1.2),
-    ),
-  );
+        padding: const EdgeInsets.only(top: 14, bottom: 8),
+        child: Text(
+          text.toUpperCase(),
+          style: headStyle(
+            size: 10,
+            weight: FontWeight.w800,
+            color: kMuted,
+          ).copyWith(letterSpacing: 1.2),
+        ),
+      );
 }
 
 class _PriceRow extends StatelessWidget {
@@ -234,25 +249,25 @@ class _PriceRow extends StatelessWidget {
   const _PriceRow(this.label, this.value, {this.isTotal = false});
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: isTotal
-              ? headStyle(size: 15, weight: FontWeight.w800)
-              : bodyStyle(size: 13),
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: isTotal
+                  ? headStyle(size: 15, weight: FontWeight.w800)
+                  : bodyStyle(size: 13),
+            ),
+            Text(
+              value,
+              style: isTotal
+                  ? headStyle(size: 15, weight: FontWeight.w800, color: kCyan3)
+                  : bodyStyle(size: 13, weight: FontWeight.w700),
+            ),
+          ],
         ),
-        Text(
-          value,
-          style: isTotal
-              ? headStyle(size: 15, weight: FontWeight.w800, color: kCyan3)
-              : bodyStyle(size: 13, weight: FontWeight.w700),
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 class _PaymentRow extends StatelessWidget {

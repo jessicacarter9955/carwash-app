@@ -5,7 +5,7 @@ import '../models/user_profile.dart';
 class AuthService {
   // ── Real login ──────────────────────────────────────
   static Future<AuthResponse> login(String email, String password) =>
-      sb.auth.signInWithPassword(email: email, password: password);
+      supabase.auth.signInWithPassword(email: email, password: password);
 
   // ── Real register ───────────────────────────────────
   static Future<AuthResponse> register({
@@ -15,20 +15,20 @@ class AuthService {
     required String phone,
     required String role,
   }) async {
-    final res = await sb.auth.signUp(
+    final res = await supabase.auth.signUp(
       email: email,
       password: password,
       data: {'full_name': name, 'role': role, 'phone': phone},
     );
     if (res.user != null) {
-      await sb.from('profiles').upsert({
+      await supabase.from('profiles').upsert({
         'id': res.user!.id,
         'full_name': name,
         'role': role,
         'phone': phone,
       });
       if (role == 'driver') {
-        await sb.from('drivers').upsert({
+        await supabase.from('drivers').upsert({
           'id': res.user!.id,
           'is_online': false,
           'vehicle_make': 'Toyota Corolla',
@@ -40,12 +40,13 @@ class AuthService {
   }
 
   // ── Sign out ────────────────────────────────────────
-  static Future<void> signOut() => sb.auth.signOut();
+  static Future<void> signOut() => supabase.auth.signOut();
 
   // ── Load profile ────────────────────────────────────
   static Future<UserProfile?> loadProfile(String uid) async {
     try {
-      final data = await sb.from('profiles').select().eq('id', uid).single();
+      final data =
+          await supabase.from('profiles').select().eq('id', uid).single();
       return UserProfile.fromMap(data);
     } catch (_) {
       return null;
@@ -54,13 +55,10 @@ class AuthService {
 
   // ── Ensure driver row exists ─────────────────────────
   static Future<void> ensureDriverRow(String uid) async {
-    final existing = await sb
-        .from('drivers')
-        .select('id')
-        .eq('id', uid)
-        .maybeSingle();
+    final existing =
+        await supabase.from('drivers').select('id').eq('id', uid).maybeSingle();
     if (existing == null) {
-      await sb.from('drivers').insert({
+      await supabase.from('drivers').insert({
         'id': uid,
         'is_online': false,
         'vehicle_make': 'Toyota Corolla',

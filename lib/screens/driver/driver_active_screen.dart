@@ -286,7 +286,7 @@ class _DriverActiveScreenState extends State<DriverActiveScreen> {
                         showToast(context, '📍 Status: pickup');
                         final o = state.currentOrder;
                         if (o != null) {
-                          await OrderService.updateStatus(o.id, 'pickup');
+                          await OrderService.updateOrderStatus(o.id, 'pickup');
                         }
                       },
                     ),
@@ -299,7 +299,7 @@ class _DriverActiveScreenState extends State<DriverActiveScreen> {
                         showToast(context, '🚗 Status: washing');
                         final o = state.currentOrder;
                         if (o != null) {
-                          await OrderService.updateStatus(o.id, 'washing');
+                          await OrderService.updateOrderStatus(o.id, 'washing');
                         }
                       },
                     ),
@@ -318,7 +318,8 @@ class _DriverActiveScreenState extends State<DriverActiveScreen> {
                           showToast(context, '✅ Delivered!');
                           final o = state.currentOrder;
                           if (o != null) {
-                            await OrderService.updateStatus(o.id, 'delivered');
+                            await OrderService.updateOrderStatus(
+                                o.id, 'delivered');
                           }
                         },
                         style: ElevatedButton.styleFrom(

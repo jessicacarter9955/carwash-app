@@ -4,8 +4,7 @@ import '../state/app_state.dart';
 class PricingService {
   static Future<void> loadFromDB(AppState state) async {
     try {
-      final data =
-          await sb.from('service_pricing').select('*');
+      final data = await supabase.from('service_pricing').select('*');
       for (final row in data as List) {
         final key = row['item_key'] as String?;
         final price = (row['price'] as num?)?.toDouble();

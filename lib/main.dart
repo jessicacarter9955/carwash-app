@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants.dart';
 import 'core/router.dart';
@@ -22,6 +23,13 @@ void main() async {
     url: kSupabaseUrl,
     anonKey: kSupabaseAnonKey,
   );
+
+  // Init Stripe
+  Stripe.publishableKey =
+      'pk_test_51QixK9LAyxeLVAm3oZ952K8CPWlnFdQPyRQ70Bq1m2zaUVXiy1CpJH8ZE5j4N09PYrPSnCKAVkaXzKoCpQlo19F600OWhYNFbm';
+  Stripe.merchantIdentifier = 'merchant.com.example.washgo'; // iOS only
+  Stripe.urlScheme = 'washgo'; // Deep link scheme
+  await Stripe.instance.applySettings();
 
   try {
     await Firebase.initializeApp();
