@@ -22,8 +22,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.6'
+          flutter-version: '3.24.0'  # ← Pin to stable version
           channel: 'stable'
+          cache: true                # ← Add caching
 
       - name: Get dependencies
         run: flutter pub get
