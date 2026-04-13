@@ -51,6 +51,11 @@ class OrderService {
     }
   }
 
+  // ✅ ADD THIS - alias so driver_active_screen.dart calls work
+  static Future<void> updateStatus(String orderId, String status) async {
+    return updateOrderStatus(orderId, status);
+  }
+
   static Future<void> assignDriver(String orderId, String driverId) async {
     try {
       await supabaseAdmin.from('orders').update(
