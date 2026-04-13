@@ -23,6 +23,7 @@ class WashGoMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final useOSM = mapboxToken.isEmpty;
     return FlutterMap(
       mapController: controller,
       options: MapOptions(
@@ -34,11 +35,10 @@ class WashGoMap extends StatelessWidget {
       ),
       children: [
         TileLayer(
-          urlTemplate:
-              'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}',
-          additionalOptions: {
-            'accessToken': mapboxToken,
-          },
+          urlTemplate: useOSM
+              ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+              : 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}',
+          additionalOptions: useOSM ? {} : {'accessToken': mapboxToken},
           userAgentPackageName: 'com.washgo.app',
         ),
         if (polylines.isNotEmpty) PolylineLayer(polylines: polylines),

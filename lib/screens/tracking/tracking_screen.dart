@@ -57,8 +57,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
+                urlTemplate: mapboxToken.isEmpty
+                    ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                    : 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=$mapboxToken',
                 userAgentPackageName: 'com.washgo.app',
               ),
 
@@ -555,8 +556,8 @@ class _TimelineStep extends StatelessWidget {
     final Color dotColor = isDone
         ? kCyan
         : isActive
-        ? kOrange
-        : kBorder2;
+            ? kOrange
+            : kBorder2;
 
     return IntrinsicHeight(
       child: Row(
@@ -571,8 +572,8 @@ class _TimelineStep extends StatelessWidget {
                   color: isDone
                       ? kCyan.withOpacity(0.12)
                       : isActive
-                      ? kOrange.withOpacity(0.12)
-                      : kBg,
+                          ? kOrange.withOpacity(0.12)
+                          : kBg,
                   shape: BoxShape.circle,
                   border: Border.all(color: dotColor, width: 2),
                 ),
