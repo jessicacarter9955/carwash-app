@@ -136,7 +136,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
     // Notify start
     await NotificationService.showLocal(
-      '🚗 Driver on the way!',
+      'Driver on the way!',
       '${state.driverName} is heading to your location · ETA ${state.etaMinutes} min',
     );
 
@@ -199,7 +199,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     );
 
     await NotificationService.showLocal(
-      '📍 Driver arrived!',
+      'Driver arrived!',
       '${state.driverName} is at your location',
     );
 
@@ -223,7 +223,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     );
 
     await NotificationService.showLocal(
-      '🧺 Heading to washing facility',
+      'Heading to washing facility',
       'Your items are picked up and on the way to be washed',
     );
 
@@ -268,7 +268,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     state = state.copyWith(phase: TrackingPhase.washing, travelledCoords: []);
 
     await NotificationService.showLocal(
-      '🫧 Washing started!',
+      'Washing started!',
       'Your items are now being washed at the facility',
     );
 
@@ -280,7 +280,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     state = state.copyWith(phase: TrackingPhase.delivered, travelledCoords: []);
 
     await NotificationService.showLocal(
-      '✅ All done!',
+      'All done!',
       'Your wash is complete. Rate your experience!',
     );
 
@@ -308,7 +308,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     );
 
     await NotificationService.showLocal(
-      '🚗 On the way back!',
+      'On the way back!',
       '${state.driverName} is returning your items',
     );
 
@@ -331,7 +331,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
         timer.cancel();
         state = state.copyWith(phase: TrackingPhase.delivered);
         await NotificationService.showLocal(
-          '🏠 Delivered back to you!',
+          'Delivered back to you!',
           'Your items have been returned. Enjoy!',
         );
         return;

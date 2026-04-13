@@ -22,12 +22,13 @@ class LocationState {
     double? lng,
     String? address,
     bool? loading,
-  }) => LocationState(
-    lat: lat ?? this.lat,
-    lng: lng ?? this.lng,
-    address: address ?? this.address,
-    loading: loading ?? this.loading,
-  );
+  }) =>
+      LocationState(
+        lat: lat ?? this.lat,
+        lng: lng ?? this.lng,
+        address: address ?? this.address,
+        loading: loading ?? this.loading,
+      );
 }
 
 class LocationNotifier extends StateNotifier<LocationState> {
@@ -78,7 +79,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       );
 
       // Notify on location detected
-      await NotificationService.showLocal('📍 Location Detected', addr);
+      await NotificationService.showLocal('Location Detected', addr);
     } catch (e) {
       state = state.copyWith(loading: false, address: 'Location unavailable');
     }
@@ -90,9 +91,9 @@ class LocationNotifier extends StateNotifier<LocationState> {
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
         return '${p.street ?? ''}, ${p.locality ?? ''}'.trim().replaceAll(
-          RegExp(r'^,\s*'),
-          '',
-        );
+              RegExp(r'^,\s*'),
+              '',
+            );
       }
     } catch (_) {}
     return '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
@@ -103,7 +104,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
   void updateAddress(String address) {
     state = state.copyWith(address: address, loading: false);
     // Notify on manual address update
-    NotificationService.showLocal('📍 Address Updated', address);
+    NotificationService.showLocal('Address Updated', address);
   }
 
   Future<void> geocodeAddress(String address) async {
@@ -126,7 +127,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
     }
 
     // Notify on address change
-    await NotificationService.showLocal('📍 Address Changed', address);
+    await NotificationService.showLocal('Address Changed', address);
   }
 }
 
