@@ -85,11 +85,11 @@ TextStyle bodyStyle({
 const String kFontHead = 'Nunito';
 const String kFontBody = 'DMSans';
 
-// Hub location
-const double kHubLat = 41.9024;
-const double kHubLng = 12.5143;
-const double kDefaultLat = 41.8988;
-const double kDefaultLng = 12.4768;
+// Hub location (London as fallback)
+const double kHubLat = 51.5074;
+const double kHubLng = -0.1278;
+const double kDefaultLat = 51.5074;
+const double kDefaultLng = -0.1278;
 
 // Rome location
 const double kRomeLat = 41.9024;

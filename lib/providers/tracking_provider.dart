@@ -25,6 +25,8 @@ class TrackingState {
   final double driverRating;
   final double driverRotation;
   final String keyStatus;
+  final double
+      simSpeedMultiplier; // Speed multiplier for demo (1x = normal, 2x = 2x faster, etc.)
 
   const TrackingState({
     this.userPos = const LatLng(kDefaultLat, kDefaultLng),
@@ -40,6 +42,7 @@ class TrackingState {
     this.driverRating = 4.9,
     this.driverRotation = 0,
     this.keyStatus = 'with_customer',
+    this.simSpeedMultiplier = 1.0,
   });
 
   TrackingState copyWith({
@@ -56,21 +59,24 @@ class TrackingState {
     double? driverRating,
     double? driverRotation,
     String? keyStatus,
-  }) => TrackingState(
-    userPos: userPos ?? this.userPos,
-    driverPos: driverPos ?? this.driverPos,
-    hubPos: hubPos ?? this.hubPos,
-    routeCoords: routeCoords ?? this.routeCoords,
-    travelledCoords: travelledCoords ?? this.travelledCoords,
-    simIndex: simIndex ?? this.simIndex,
-    phase: phase ?? this.phase,
-    etaMinutes: etaMinutes ?? this.etaMinutes,
-    driverName: driverName ?? this.driverName,
-    driverPlate: driverPlate ?? this.driverPlate,
-    driverRating: driverRating ?? this.driverRating,
-    driverRotation: driverRotation ?? this.driverRotation,
-    keyStatus: keyStatus ?? this.keyStatus,
-  );
+    double? simSpeedMultiplier,
+  }) =>
+      TrackingState(
+        userPos: userPos ?? this.userPos,
+        driverPos: driverPos ?? this.driverPos,
+        hubPos: hubPos ?? this.hubPos,
+        routeCoords: routeCoords ?? this.routeCoords,
+        travelledCoords: travelledCoords ?? this.travelledCoords,
+        simIndex: simIndex ?? this.simIndex,
+        phase: phase ?? this.phase,
+        etaMinutes: etaMinutes ?? this.etaMinutes,
+        driverName: driverName ?? this.driverName,
+        driverPlate: driverPlate ?? this.driverPlate,
+        driverRating: driverRating ?? this.driverRating,
+        driverRotation: driverRotation ?? this.driverRotation,
+        keyStatus: keyStatus ?? this.keyStatus,
+        simSpeedMultiplier: simSpeedMultiplier ?? this.simSpeedMultiplier,
+      );
 }
 
 class TrackingNotifier extends StateNotifier<TrackingState> {
@@ -147,7 +153,8 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   // ── Phase 1: Driver → User ──────────────────────────────────
   void _runPhase1ToPickup(LatLng userPos, LatLng hubPos) {
     _simTimer?.cancel();
-    _simTimer = Timer.periodic(const Duration(milliseconds: 700), (
+    final interval = (700 / state.simSpeedMultiplier).round();
+    _simTimer = Timer.periodic(Duration(milliseconds: interval), (
       timer,
     ) async {
       if (!mounted) {
@@ -227,7 +234,8 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   // ── Phase 2: User → Hub ─────────────────────────────────────
   void _runPhase2ToHub(LatLng hubPos) {
     _simTimer?.cancel();
-    _simTimer = Timer.periodic(const Duration(milliseconds: 600), (
+    final interval = (600 / state.simSpeedMultiplier).round();
+    _simTimer = Timer.periodic(Duration(milliseconds: interval), (
       timer,
     ) async {
       if (!mounted) {
@@ -309,7 +317,8 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
   void _runReturnToUser(LatLng userPos) {
     _simTimer?.cancel();
-    _simTimer = Timer.periodic(const Duration(milliseconds: 700), (
+    final interval = (700 / state.simSpeedMultiplier).round();
+    _simTimer = Timer.periodic(Duration(milliseconds: interval), (
       timer,
     ) async {
       if (!mounted) {
@@ -360,13 +369,10 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       final order = _ref.read(orderProvider).currentOrder;
       if (order == null || order.id.startsWith('local-')) return;
       final sb = _ref.read(supabaseProvider);
-      await sb
-          .from('orders')
-          .update({
-            'status': status,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', order.id);
+      await sb.from('orders').update({
+        'status': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', order.id);
       await sb.from('order_status_history').insert({
         'order_id': order.id,
         'status': status,
@@ -401,6 +407,17 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     _simTimer?.cancel();
     _realtimeSub?.cancel();
     state = const TrackingState();
+  }
+
+  void setSpeedMultiplier(double multiplier) {
+    state = state.copyWith(simSpeedMultiplier: multiplier);
+    // Restart current phase with new speed if tracking is active
+    if (state.phase == TrackingPhase.toPickup && state.routeCoords.isNotEmpty) {
+      _runPhase1ToPickup(state.userPos, state.hubPos);
+    } else if (state.phase == TrackingPhase.toHub &&
+        state.routeCoords.isNotEmpty) {
+      _runPhase2ToHub(state.hubPos);
+    }
   }
 
   @override

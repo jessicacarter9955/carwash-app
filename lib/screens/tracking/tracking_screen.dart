@@ -52,7 +52,9 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
             options: MapOptions(
               center: tracking.driverPos,
               zoom: 15,
-              interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all,
+              ),
               onMapReady: () => setState(() => _mapReady = true),
             ),
             children: [
@@ -112,15 +114,28 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     ),
                   ),
 
-                  // Driver marker — car icon, blue
+                  // Driver marker — car icon, white
                   Marker(
                     point: tracking.driverPos,
-                    width: 32,
-                    height: 32,
-                    child: const Icon(
-                      Icons.directions_car,
-                      color: kCyan,
-                      size: 24,
+                    width: 44,
+                    height: 44,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kCyan,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: kCyan.withOpacity(0.5),
+                            blurRadius: 14,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.directions_car,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
 
@@ -183,7 +198,20 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
                     child: const Icon(Icons.close, size: 18, color: kText),
                   ),
                 ),
-                _PhaseChip(phase: tracking.phase, eta: tracking.etaMinutes),
+                Row(
+                  children: [
+                    _PhaseChip(phase: tracking.phase, eta: tracking.etaMinutes),
+                    const SizedBox(width: 8),
+                    _SpeedControl(
+                      currentSpeed: tracking.simSpeedMultiplier,
+                      onSpeedChanged: (speed) {
+                        ref
+                            .read(trackingProvider.notifier)
+                            .setSpeedMultiplier(speed);
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -596,6 +624,49 @@ class _TimelineStep extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Speed control widget ───────────────────────────────────────
+class _SpeedControl extends StatelessWidget {
+  final double currentSpeed;
+  final ValueChanged<double> onSpeedChanged;
+
+  const _SpeedControl({
+    required this.currentSpeed,
+    required this.onSpeedChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: kSurface,
+        border: Border.all(color: kBorder),
+        borderRadius: BorderRadius.circular(rSm),
+        boxShadow: shadowXs,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.speed, size: 14, color: kMuted),
+          const SizedBox(width: 6),
+          Text(
+            '${currentSpeed}x',
+            style: headStyle(size: 11, weight: FontWeight.w700),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () {
+              final newSpeed = currentSpeed >= 5.0 ? 1.0 : currentSpeed + 1.0;
+              onSpeedChanged(newSpeed);
+            },
+            child: const Icon(Icons.refresh, size: 14, color: kCyan),
           ),
         ],
       ),
