@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/constants.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/tracking_provider.dart';
+import '../../providers/compass_provider.dart';
 import '../../widgets/app_toast.dart';
 
 class TrackingScreen extends ConsumerStatefulWidget {
@@ -41,6 +42,7 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
   @override
   Widget build(BuildContext context) {
     final tracking = ref.watch(trackingProvider);
+    final compass = ref.watch(compassProvider);
     final order = ref.watch(orderProvider).currentOrder;
 
     return Scaffold(
@@ -89,27 +91,30 @@ class _TrackingScreenState extends ConsumerState<TrackingScreen> {
               // ── Markers ───────────────────────────────────
               MarkerLayer(
                 markers: [
-                  // User marker
+                  // User marker with compass direction
                   Marker(
                     point: tracking.userPos,
-                    width: 36,
-                    height: 36,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: kMint,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: kMint.withOpacity(0.4),
-                            blurRadius: 12,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 16,
+                    width: 40,
+                    height: 40,
+                    child: Transform.rotate(
+                      angle: (compass.heading * 3.14159) / 180,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: kMint,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: kMint.withOpacity(0.4),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.navigation,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
