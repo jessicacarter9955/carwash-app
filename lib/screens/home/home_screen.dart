@@ -171,18 +171,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              initialCenter: LatLng(location.lat, location.lng),
-              initialZoom: 15,
-              interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              center: LatLng(location.lat, location.lng),
+              zoom: 15,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              ),
               onMapReady: () => setState(() => _mapReady = true),
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}',
-                additionalOptions: {
-                  'accessToken': mapboxToken,
-                },
+                urlTemplate: mapboxToken.isEmpty
+                    ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                    : 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}',
+                additionalOptions:
+                    mapboxToken.isEmpty ? {} : {'accessToken': mapboxToken},
                 userAgentPackageName: 'com.washgo.app',
               ),
               MarkerLayer(

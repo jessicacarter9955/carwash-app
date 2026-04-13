@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/order_model.dart';
 import 'auth_providers.dart';
 import 'cart_provider.dart';
@@ -34,7 +36,33 @@ class OrderState {
 
 class OrderNotifier extends StateNotifier<OrderState> {
   final Ref _ref;
-  OrderNotifier(this._ref) : super(const OrderState());
+  OrderNotifier(this._ref) : super(const OrderState()) {
+    _loadSavedOrders();
+  }
+
+  Future<void> _loadSavedOrders() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedOrderJson = prefs.getString('current_order');
+      if (savedOrderJson != null) {
+        final orderMap = jsonDecode(savedOrderJson);
+        final order = OrderModel.fromMap(orderMap);
+        state = state.copyWith(currentOrder: order);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveCurrentOrder() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (state.currentOrder != null) {
+        await prefs.setString(
+            'current_order', jsonEncode(state.currentOrder!.toMap()));
+      } else {
+        await prefs.remove('current_order');
+      }
+    } catch (_) {}
+  }
 
   Future<bool> placeOrder({bool localMode = true}) async {
     state = state.copyWith(loading: true, error: null);
@@ -68,6 +96,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
           updatedAt: DateTime.now(),
         );
         state = state.copyWith(currentOrder: order, loading: false);
+        await _saveCurrentOrder();
         return true;
       }
 
@@ -128,8 +157,15 @@ class OrderNotifier extends StateNotifier<OrderState> {
     }
   }
 
-  void setCurrentOrder(OrderModel order) =>
-      state = state.copyWith(currentOrder: order);
+  void setCurrentOrder(OrderModel order) {
+    state = state.copyWith(currentOrder: order);
+    _saveCurrentOrder();
+  }
+
+  void clearOrder() {
+    state = state.copyWith(currentOrder: null);
+    _saveCurrentOrder();
+  }
 
   Future<void> submitRating(int rating, List<String> tags) async {
     try {

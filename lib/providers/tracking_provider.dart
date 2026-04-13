@@ -110,6 +110,74 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   Future<void> startTracking(double userLat, double userLng) async {
     await NotificationService.init();
 
+    // Check if there's a saved order to restore from
+    final order = _ref.read(orderProvider).currentOrder;
+    if (order != null && order.id.startsWith('local-')) {
+      // Restore from saved order
+      final userPos =
+          LatLng(order.pickupLat ?? userLat, order.pickupLng ?? userLng);
+      final driverPos =
+          _generateDriverNearUser(userPos.latitude, userPos.longitude);
+      final hubPos = _generateHubNearUser(userPos.latitude, userPos.longitude);
+
+      // Determine phase based on order status
+      TrackingPhase phase;
+      if (order.status == 'delivered') {
+        phase = TrackingPhase.delivered;
+      } else if (order.status == 'washing') {
+        phase = TrackingPhase.washing;
+      } else if (order.status == 'pickup') {
+        phase = TrackingPhase.atPickup;
+      } else {
+        phase = TrackingPhase.toPickup;
+      }
+
+      state = state.copyWith(
+        userPos: userPos,
+        driverPos: driverPos,
+        hubPos: hubPos,
+        phase: phase,
+        keyStatus: order.keyStatus ?? 'with_customer',
+      );
+
+      // Resume tracking based on phase
+      if (phase == TrackingPhase.toPickup) {
+        final routeResult = await RoutingService.fetchRoute(
+          driverPos.latitude,
+          driverPos.longitude,
+          userPos.latitude,
+          userPos.longitude,
+        );
+        state = state.copyWith(
+          routeCoords: routeResult.coords,
+          travelledCoords: [],
+          simIndex: 0,
+          etaMinutes: int.tryParse(routeResult.dur) ?? 8,
+        );
+        _runPhase1ToPickup(userPos, hubPos);
+      } else if (phase == TrackingPhase.toHub) {
+        final routeResult = await RoutingService.fetchRoute(
+          userPos.latitude,
+          userPos.longitude,
+          hubPos.latitude,
+          hubPos.longitude,
+        );
+        state = state.copyWith(
+          routeCoords: routeResult.coords,
+          travelledCoords: [],
+          simIndex: 0,
+          driverPos: userPos,
+        );
+        _runPhase2ToHub(hubPos);
+      } else if (phase == TrackingPhase.washing) {
+        _onAtHub(hubPos);
+      }
+
+      _subscribeRealtime();
+      return;
+    }
+
+    // Normal tracking start
     final userPos = LatLng(userLat, userLng);
     final driverPos = _generateDriverNearUser(userLat, userLng);
     final hubPos = _generateHubNearUser(userLat, userLng);
