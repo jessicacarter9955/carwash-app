@@ -22,4 +22,17 @@ class DriverService {
       return null;
     }
   }
+
+  static Future<List<Map<String, dynamic>>> fetchDrivers() async {
+    try {
+      final data = await supabase
+          .from('drivers')
+          .select('*, profiles(full_name)')
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      print('Error fetching drivers: $e');
+      return [];
+    }
+  }
 }
