@@ -46,8 +46,6 @@ dependencies:
   flutter_stripe: ^10.0.0
   url_launcher: ^6.2.0
 
-# ← REMOVE the dependency_overrides section entirely
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
