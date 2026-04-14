@@ -3,13 +3,13 @@ allprojects {
         google()
         mavenCentral()
     }
-}
-
-// ← ADD THIS - fixes ALL plugins missing compileSdk
-subprojects {
-    afterEvaluate {
-        extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
-            compileSdkVersion(34)
+    
+    // ← Runs BEFORE each project evaluates - fixes flutter variable error
+    beforeEvaluate {
+        plugins.withId("com.android.library") {
+            extensions.configure<com.android.build.gradle.LibraryExtension> {
+                compileSdk = 34
+            }
         }
     }
 }
