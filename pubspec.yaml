@@ -15,7 +15,7 @@ dependencies:
   provider: ^6.1.1
   
   # Backend
-  supabase_flutter: ^2.0.0
+  supabase_flutter: ^2.8.0  # ← Upgraded (pulls compatible app_links)
   firebase_core: ^2.24.2
   firebase_messaging: ^14.7.9
   
@@ -46,9 +46,7 @@ dependencies:
   flutter_stripe: ^10.0.0
   url_launcher: ^6.2.0
 
-# ↓ ADD THIS ENTIRE SECTION
-dependency_overrides:
-  app_links: ^3.5.1  # Force compatible version of transitive dependency
+# ← REMOVE the dependency_overrides section entirely
 
 dev_dependencies:
   flutter_test:
