@@ -25,8 +25,8 @@ dependencies:
   # Maps & Location
   flutter_map: ^6.1.0
   latlong2: ^0.9.0
-  geolocator: ^10.1.0
-  geocoding: ^2.1.1
+  geolocator: ^11.0.0
+  geocoding: ^3.0.0
   flutter_compass: ^0.8.0
   
   # UI
@@ -47,7 +47,13 @@ dependencies:
   url_launcher: ^6.2.0
 
 dependency_overrides:
-  app_links: 3.5.1  # ← Pin exact version, no caret
+  app_links: 3.5.1
+  geolocator: 11.0.0              # ← Add exact version
+  geolocator_android: 5.0.2      # ← Force newer android plugin
+  geolocator_apple: 2.3.13       # ← Force newer ios plugin
+  geolocator_platform_interface: 4.2.6  # ← Force newer interface
+  geocoding: 3.0.0               # ← Add exact version
+  geocoding_android: 5.0.1       # ← Force newer android plugin
 
 dev_dependencies:
   flutter_test:

@@ -22,12 +22,18 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.5'  # ← Back to 3.24.x
+          flutter-version: '3.24.5'
           channel: 'stable'
           cache: true
 
+      - name: Delete lock file
+        run: rm -f pubspec.lock        # ← Separate step, correct indent
+
       - name: Get dependencies
-        run: flutter pub get
+        run: flutter pub get           # ← Separate step, correct indent
+
+      - name: Verify versions          # ← Check resolved versions
+        run: flutter pub deps --style=list | grep -E "geolocator|app_links|geocoding"
 
       - name: Build APK
         run: flutter build apk --release --dart-define=MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }}
