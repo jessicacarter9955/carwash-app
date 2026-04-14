@@ -15,7 +15,7 @@ dependencies:
   provider: ^6.1.1
   
   # Backend
-  supabase_flutter: ^2.8.0  # ← Upgraded (pulls compatible app_links)
+  supabase_flutter: ^2.8.0
   firebase_core: ^2.24.2
   firebase_messaging: ^14.7.9
   
