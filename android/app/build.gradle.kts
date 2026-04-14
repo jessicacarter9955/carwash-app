@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.washgo"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34                    // ← Explicit instead of flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -22,7 +22,7 @@ android {
     defaultConfig {
         applicationId = "com.example.washgo"
         minSdk = 21
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34                 // ← Explicit instead of flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -31,7 +31,7 @@ android {
         release {
             signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
-            isShrinkResources = false  // ← THIS is the fix
+            isShrinkResources = false
         }
     }
 
